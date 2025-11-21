@@ -350,6 +350,11 @@ Homeshell supports encrypted virtual filesystems using SQLCipher. Configure moun
 - `max_size_mb` - Maximum storage size in MB (default: 100)
 - `auto_mount` - Mount automatically on startup (default: true)
 
+**Automatic Setup:**
+- Parent directories are **automatically created** if they don't exist
+- No need to manually create `~/.homeshell/` or other mount directories
+- First mount creates and encrypts a new database file
+
 **Password Security:**
 - If `password` is empty or omitted in config, you'll be prompted interactively
 - Password input is hidden (no echo to terminal)

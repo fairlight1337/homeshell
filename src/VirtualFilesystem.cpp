@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 namespace homeshell
 {
@@ -105,6 +106,12 @@ std::string VirtualFilesystem::resolveRelativePath(const std::string& path) cons
         return path;
     }
 
+    // Handle . (current directory)
+    if (path == ".")
+    {
+        return current_directory_;
+    }
+
     // Relative path - resolve against current directory
     std::string result = current_directory_;
     if (result.back() != '/')
@@ -113,7 +120,41 @@ std::string VirtualFilesystem::resolveRelativePath(const std::string& path) cons
     }
     result += path;
 
-    // TODO: Normalize path (remove .., ., etc.)
+    // Normalize path (remove ., .., etc.)
+    std::vector<std::string> parts;
+    std::stringstream ss(result);
+    std::string part;
+
+    while (std::getline(ss, part, '/'))
+    {
+        if (part.empty() || part == ".")
+        {
+            continue; // Skip empty parts and "."
+        }
+        else if (part == "..")
+        {
+            if (!parts.empty())
+            {
+                parts.pop_back(); // Go up one directory
+            }
+        }
+        else
+        {
+            parts.push_back(part);
+        }
+    }
+
+    // Reconstruct path
+    if (parts.empty())
+    {
+        return "/";
+    }
+
+    result = "";
+    for (const auto& p : parts)
+    {
+        result += "/" + p;
+    }
 
     return result;
 }

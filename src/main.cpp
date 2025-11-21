@@ -23,6 +23,7 @@
 #include <homeshell/commands/VfsCommand.hpp>
 #include <homeshell/version.h>
 
+#include <fmt/color.h>
 #include <fmt/core.h>
 
 #include <CLI/CLI.hpp>
@@ -157,6 +158,27 @@ int main(int argc, char** argv)
             fmt::print(stderr, "Warning: Failed to auto-mount '{}' (incorrect password?)\n",
                        mount_config.name);
         }
+    }
+
+    // Display mounted volumes if any
+    auto mount_names = vfs.getMountNames();
+    if (!mount_names.empty())
+    {
+        if (verbose)
+        {
+            fmt::print("\n");
+        }
+        fmt::print(fg(fmt::color::green), "📁 Mounted {} encrypted volume(s):\n",
+                   mount_names.size());
+        for (const auto& name : mount_names)
+        {
+            auto* mount = vfs.getMount(name);
+            if (mount)
+            {
+                fmt::print("  • {} → {}\n", mount->getMountPoint(), name);
+            }
+        }
+        fmt::print("\n");
     }
 
     // Register built-in commands

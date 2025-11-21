@@ -29,6 +29,21 @@ bool EncryptedMount::mount(const std::string& password)
         return true; // Already mounted
     }
 
+    // Ensure parent directory exists
+    std::filesystem::path db_file_path(db_path_);
+    std::filesystem::path parent_dir = db_file_path.parent_path();
+
+    if (!parent_dir.empty() && !std::filesystem::exists(parent_dir))
+    {
+        std::error_code ec;
+        std::filesystem::create_directories(parent_dir, ec);
+        if (ec)
+        {
+            // Failed to create parent directory
+            return false;
+        }
+    }
+
     // Open/create database
     int rc = sqlite3_open(db_path_.c_str(), &db_);
     if (rc != SQLITE_OK)

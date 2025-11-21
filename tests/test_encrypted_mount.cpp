@@ -198,3 +198,22 @@ TEST_F(EncryptedMountTest, RootDirectoryExists)
     EXPECT_TRUE(mount.isDirectory("/"));
 }
 
+TEST_F(EncryptedMountTest, AutoCreateParentDirectory)
+{
+    // Use a deeply nested path that doesn't exist
+    auto nested_path = test_dir_ / "deeply" / "nested" / "path" / "test.db";
+    
+    // Parent directories don't exist yet
+    EXPECT_FALSE(fs::exists(nested_path.parent_path()));
+    
+    homeshell::EncryptedMount mount("test", nested_path.string(), "/test", 10);
+    
+    // Mount should create parent directories automatically
+    EXPECT_TRUE(mount.mount(password_));
+    EXPECT_TRUE(mount.is_mounted());
+    
+    // Verify parent directories were created
+    EXPECT_TRUE(fs::exists(nested_path.parent_path()));
+    EXPECT_TRUE(fs::exists(nested_path));
+}
+
