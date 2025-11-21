@@ -5,6 +5,7 @@
 #include <homeshell/PromptFormatter.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/TerminalInfo.hpp>
+#include <homeshell/VirtualFilesystem.hpp>
 
 #include <fmt/color.h>
 #include <fmt/core.h>
@@ -265,8 +266,9 @@ private:
         // Split the context to get the current word
         std::string current_word;
         size_t last_space = context.find_last_of(' ');
+        bool is_first_word = (last_space == std::string::npos);
 
-        if (last_space == std::string::npos)
+        if (is_first_word)
         {
             current_word = context;
             contextLen = static_cast<int>(current_word.length());
@@ -277,17 +279,94 @@ private:
             contextLen = static_cast<int>(current_word.length());
         }
 
-        // Get matching commands
-        auto& registry = CommandRegistry::getInstance();
-        for (const auto& name : registry.getAllCommandNames())
+        // If it's the first word, complete commands
+        if (is_first_word)
         {
-            if (name.find(current_word) == 0)
+            auto& registry = CommandRegistry::getInstance();
+            for (const auto& name : registry.getAllCommandNames())
             {
-                completions.push_back(name);
+                if (name.find(current_word) == 0)
+                {
+                    completions.push_back(name);
+                }
             }
+        }
+        else
+        {
+            // For subsequent words, complete file/directory names
+            completeFilesAndDirectories(current_word, completions);
         }
 
         return completions;
+    }
+
+    void completeFilesAndDirectories(const std::string& prefix,
+                                     replxx::Replxx::completions_t& completions)
+    {
+        auto& vfs = VirtualFilesystem::getInstance();
+        std::string dir_path;
+        std::string search_prefix;
+
+        // Determine directory to search
+        size_t last_slash = prefix.find_last_of('/');
+        if (last_slash != std::string::npos)
+        {
+            dir_path = prefix.substr(0, last_slash);
+            search_prefix = prefix.substr(last_slash + 1);
+            if (dir_path.empty())
+            {
+                dir_path = "/";
+            }
+        }
+        else
+        {
+            dir_path = vfs.getCurrentDirectory();
+            search_prefix = prefix;
+        }
+
+        // Get directory listing
+        try
+        {
+            if (!vfs.exists(dir_path) || !vfs.isDirectory(dir_path))
+            {
+                return;
+            }
+
+            auto entries = vfs.listDirectory(dir_path);
+            for (const auto& entry : entries)
+            {
+                // Check if entry name starts with the search prefix
+                if (entry.name.find(search_prefix) == 0)
+                {
+                    std::string completion;
+                    if (last_slash != std::string::npos)
+                    {
+                        completion = dir_path;
+                        if (dir_path != "/")
+                        {
+                            completion += "/";
+                        }
+                        completion += entry.name;
+                    }
+                    else
+                    {
+                        completion = entry.name;
+                    }
+
+                    // Add trailing slash for directories
+                    if (entry.is_directory)
+                    {
+                        completion += "/";
+                    }
+
+                    completions.push_back(completion);
+                }
+            }
+        }
+        catch (...)
+        {
+            // Ignore errors during completion
+        }
     }
 
     Status executeCommand(const std::string& line)

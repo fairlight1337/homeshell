@@ -10,6 +10,7 @@
 #include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/ExitCommand.hpp>
+#include <homeshell/commands/FileCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
 #include <homeshell/commands/MkdirCommand.hpp>
@@ -197,6 +198,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<MkdirCommand>());
     registry.registerCommand(std::make_shared<TouchCommand>());
     registry.registerCommand(std::make_shared<RmCommand>());
+    registry.registerCommand(std::make_shared<FileCommand>());
 
     // Virtual filesystem commands
     registry.registerCommand(std::make_shared<MountCommand>());

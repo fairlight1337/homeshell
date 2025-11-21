@@ -155,8 +155,9 @@ homeshell> exit
 
 ### Tab Completion
 
-Press **TAB** to autocomplete commands:
+Press **TAB** to autocomplete commands and file/directory names:
 
+**Command completion:**
 ```
 homeshell> ec<TAB>
 homeshell> echo
@@ -164,6 +165,24 @@ homeshell> echo
 homeshell> hel<TAB>
 homeshell> help
 ```
+
+**File/directory completion:**
+```
+homeshell> ls /ho<TAB>
+homeshell> ls /home/
+
+homeshell> cat myfi<TAB>
+homeshell> cat myfile.txt
+
+homeshell> cd /sec<TAB>
+homeshell> cd /secure/
+```
+
+Tab completion works for:
+- ✅ Commands (first word)
+- ✅ Files and directories (subsequent words)
+- ✅ Virtual encrypted filesystem paths
+- ✅ Directories show trailing `/`
 
 ### Built-in Commands
 
@@ -179,6 +198,7 @@ homeshell> help
 | `mkdir` | Create a directory | Sync |
 | `touch` | Create or update a file | Sync |
 | `rm` | Remove files or directories | Sync |
+| `file` | Determine file type (magic detection) | Sync |
 | `mount` | Mount encrypted storage | Sync |
 | `unmount` | Unmount encrypted storage | Sync |
 | `vfs` | Show virtual filesystem info | Sync |
@@ -204,6 +224,13 @@ homeshell> help
 
 **`pwd`**
 - Print the current working directory
+
+**`file <path> [path2 ...]`**
+- Determine file type using magic number detection
+- Detects:  PNG, JPEG, GIF, PDF, ZIP, gzip, bzip2, ELF executables, SQLite databases, XML, HTML, JSON, scripts (with shebang), and more
+- Color-coded output for different file types
+- Works with both regular and virtual encrypted paths
+- Example: `file document.pdf image.png /secure/data.json`
 
 **`cat <file>`**
 - Display the contents of a file
