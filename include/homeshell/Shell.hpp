@@ -9,6 +9,8 @@
 #include <fmt/color.h>
 #include <fmt/core.h>
 
+#include <atomic>
+#include <csignal>
 #include <future>
 #include <memory>
 #include <replxx.hxx>
@@ -27,8 +29,22 @@ public:
         : config_(config)
         , terminal_info_(terminal_info)
         , replxx_()
+        , current_command_(nullptr)
+        , interrupt_received_(false)
+        , history_file_(config.expandPath(config.history_file))
     {
         setupReplxx();
+        setupSignalHandler();
+        loadHistory();
+    }
+
+    ~Shell()
+    {
+        // Save history before exiting
+        saveHistory();
+
+        // Restore default signal handler
+        std::signal(SIGINT, SIG_DFL);
     }
 
     void run()
@@ -84,7 +100,93 @@ public:
         return executeCommand(command_line);
     }
 
+    static Shell* instance_;
+
 private:
+    static void signalHandler(int signal)
+    {
+        if (signal == SIGINT && instance_)
+        {
+            instance_->handleInterrupt();
+        }
+    }
+
+    void handleInterrupt()
+    {
+        interrupt_received_.store(true);
+
+        if (current_command_ && current_command_->supportsCancellation())
+        {
+            fmt::print("\n"); // Newline after ^C
+            fmt::print(fg(fmt::color::yellow), "Cancelling command...\n");
+            current_command_->cancel();
+        }
+        else if (current_command_)
+        {
+            fmt::print("\n");
+            fmt::print(
+                fg(fmt::color::yellow),
+                "Command does not support cancellation. Press CTRL-C again to force exit.\n");
+        }
+        else
+        {
+            // No command running, just print newline
+            fmt::print("\n");
+        }
+    }
+
+    void setupSignalHandler()
+    {
+        instance_ = this;
+        std::signal(SIGINT, signalHandler);
+    }
+
+    void loadHistory()
+    {
+        if (history_file_.empty())
+        {
+            return;
+        }
+
+        std::ifstream file(history_file_);
+        if (!file.is_open())
+        {
+            // History file doesn't exist yet, that's okay
+            return;
+        }
+
+        std::string line;
+        while (std::getline(file, line))
+        {
+            if (!line.empty())
+            {
+                replxx_.history_add(line);
+            }
+        }
+    }
+
+    void saveHistory()
+    {
+        if (history_file_.empty())
+        {
+            return;
+        }
+
+        std::ofstream file(history_file_);
+        if (!file.is_open())
+        {
+            // Can't save history, but don't fail
+            return;
+        }
+
+        // Get all history and save it
+        replxx::Replxx::HistoryScan history(replxx_.history_scan());
+        while (history.next())
+        {
+            file << history.get().text() << "\n";
+        }
+    }
+
     void setupReplxx()
     {
         // Set up history file
@@ -138,27 +240,19 @@ private:
 
         if (terminal_info_.hasColorSupport())
         {
-            return fmt::format(fg(fmt::color::green) | fmt::emphasis::bold, "{}", 
-                             formatted_prompt);
+            return fmt::format(fg(fmt::color::green) | fmt::emphasis::bold, "{}", formatted_prompt);
         }
         return formatted_prompt;
     }
 
     void printWelcome()
     {
-        if (terminal_info_.hasColorSupport())
+        if (!config_.motd.empty())
         {
-            fmt::print(fg(fmt::color::cyan) | fmt::emphasis::bold, "Welcome to Homeshell!\n");
-            fmt::print("Type {} for available commands.\n\n",
-                       fmt::format(fg(fmt::color::yellow), "'help'"));
-        }
-        else
-        {
-            fmt::print("Welcome to Homeshell!\n");
-            fmt::print("Type 'help' for available commands.\n\n");
+            fmt::print("{}\n\n", config_.motd);
         }
 
-        if (terminal_info_.hasEmojiSupport())
+        if (terminal_info_.hasEmojiSupport() && config_.motd.find("✨") == std::string::npos)
         {
             fmt::print("✨ Emoji support detected!\n\n");
         }
@@ -234,14 +328,21 @@ private:
 
     Status executeAsync(std::shared_ptr<ICommand> command, const CommandContext& context)
     {
+        // Store current command for cancellation
+        current_command_ = command;
+        interrupt_received_.store(false);
+
         // Launch async task
         auto future = std::async(std::launch::async,
                                  [command, context]() { return command->execute(context); });
 
-        // For now, just wait for completion
-        // In a more sophisticated version, we could allow multiple
-        // async tasks and manage their output
-        return future.get();
+        // Wait for completion
+        Status result = future.get();
+
+        // Clear current command
+        current_command_ = nullptr;
+
+        return result;
     }
 
     std::vector<std::string> tokenize(const std::string& line)
@@ -261,6 +362,11 @@ private:
     Config config_;
     TerminalInfo terminal_info_;
     replxx::Replxx replxx_;
+    std::shared_ptr<ICommand> current_command_;
+    std::atomic<bool> interrupt_received_;
+    std::string history_file_;
 };
+
+Shell* Shell::instance_ = nullptr;
 
 } // namespace homeshell

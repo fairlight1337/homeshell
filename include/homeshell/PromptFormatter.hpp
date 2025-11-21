@@ -1,12 +1,14 @@
 #pragma once
 
 #include <homeshell/FilesystemHelper.hpp>
+
+#include <unistd.h>
+
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <unistd.h>
 
 namespace homeshell
 {
@@ -29,9 +31,8 @@ public:
     }
 
 private:
-    static std::string replaceToken(const std::string& str,
-                                     const std::string& token,
-                                     const std::string& value)
+    static std::string replaceToken(const std::string& str, const std::string& token,
+                                    const std::string& value)
     {
         std::string result = str;
         size_t pos = 0;
@@ -75,9 +76,8 @@ private:
         std::tm tm = *std::localtime(&time);
 
         std::ostringstream oss;
-        oss << std::setfill('0') << std::setw(2) << tm.tm_hour << ":"
-            << std::setfill('0') << std::setw(2) << tm.tm_min << ":"
-            << std::setfill('0') << std::setw(2) << tm.tm_sec;
+        oss << std::setfill('0') << std::setw(2) << tm.tm_hour << ":" << std::setfill('0')
+            << std::setw(2) << tm.tm_min << ":" << std::setfill('0') << std::setw(2) << tm.tm_sec;
 
         return oss.str();
     }
@@ -89,13 +89,11 @@ private:
         std::tm tm = *std::localtime(&time);
 
         std::ostringstream oss;
-        oss << (tm.tm_year + 1900) << "-"
-            << std::setfill('0') << std::setw(2) << (tm.tm_mon + 1) << "-"
-            << std::setfill('0') << std::setw(2) << tm.tm_mday;
+        oss << (tm.tm_year + 1900) << "-" << std::setfill('0') << std::setw(2) << (tm.tm_mon + 1)
+            << "-" << std::setfill('0') << std::setw(2) << tm.tm_mday;
 
         return oss.str();
     }
 };
 
 } // namespace homeshell
-

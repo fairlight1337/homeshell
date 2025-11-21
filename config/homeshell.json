@@ -1,3 +1,5 @@
 {
-  "prompt_format": "[%user%@%folder%]> "
+  "prompt_format": "homeshell> ",
+  "history_file": "~/.homeshell_history",
+  "motd": "Welcome to Homeshell!\nType 'help' for available commands."
 }

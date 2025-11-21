@@ -2,8 +2,9 @@
 
 #include <homeshell/Command.hpp>
 #include <homeshell/FilesystemHelper.hpp>
-#include <fmt/core.h>
+
 #include <fmt/color.h>
+#include <fmt/core.h>
 
 namespace homeshell
 {
@@ -49,7 +50,7 @@ public:
                 // Handle combined flags like -lh or single flags like -h
                 bool has_help = false;
                 bool has_other = false;
-                
+
                 for (size_t i = 1; i < arg.length(); ++i)
                 {
                     if (arg[i] == 'l')
@@ -76,7 +77,7 @@ public:
                         return Status::error("Unknown flag: -" + std::string(1, arg[i]));
                     }
                 }
-                
+
                 if (has_help && !has_other)
                 {
                     printHelp();
@@ -165,7 +166,7 @@ private:
         for (const auto& entry : entries)
         {
             char type = entry.is_directory ? 'd' : (entry.is_symlink ? 'l' : '-');
-            
+
             std::string size_str;
             if (human_readable)
             {
@@ -195,4 +196,3 @@ private:
 };
 
 } // namespace homeshell
-

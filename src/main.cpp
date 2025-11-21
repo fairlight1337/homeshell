@@ -3,10 +3,12 @@
 #include <homeshell/Shell.hpp>
 #include <homeshell/TerminalInfo.hpp>
 #include <homeshell/commands/CdCommand.hpp>
+#include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/ExitCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
+#include <homeshell/commands/PingCommand.hpp>
 #include <homeshell/commands/PwdCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
 #include <homeshell/version.h>
@@ -96,11 +98,15 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<ExitCommand>());
     registry.registerCommand(std::make_shared<EchoCommand>());
     registry.registerCommand(std::make_shared<SleepCommand>());
+    registry.registerCommand(std::make_shared<DateTimeCommand>());
 
     // Filesystem commands
     registry.registerCommand(std::make_shared<LsCommand>());
     registry.registerCommand(std::make_shared<CdCommand>());
     registry.registerCommand(std::make_shared<PwdCommand>());
+
+    // Network commands
+    registry.registerCommand(std::make_shared<PingCommand>());
 
     // Create the shell
     Shell shell(config, terminal_info);

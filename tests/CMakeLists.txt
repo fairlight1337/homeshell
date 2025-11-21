@@ -4,6 +4,7 @@ add_executable(homeshell_tests
     test_config.cpp
     test_filesystem_helper.cpp
     test_prompt_formatter.cpp
+    test_ls_command.cpp
 )
 
 # Disable clang-tidy for tests

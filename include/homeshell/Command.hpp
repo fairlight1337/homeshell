@@ -32,6 +32,17 @@ public:
     virtual std::string getDescription() const = 0;
     virtual CommandType getType() const = 0;
     virtual Status execute(const CommandContext& context) = 0;
+
+    // Called when command should be cancelled (e.g., CTRL-C pressed)
+    virtual void cancel()
+    {
+    }
+
+    // Check if command supports cancellation
+    virtual bool supportsCancellation() const
+    {
+        return false;
+    }
 };
 
 class CommandRegistry

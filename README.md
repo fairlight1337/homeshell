@@ -4,6 +4,11 @@ A modern, interactive C++20 shell with advanced features including line editing,
 
 ## Features
 
+### ⚡ Signal Handling & Cancellation
+- **CTRL-C handling** - Gracefully cancels ongoing operations instead of killing the shell
+- **Command cancellation** - Async commands can be interrupted safely
+- **Non-blocking** - Shell remains responsive during long-running operations
+
 ### 🎨 Modern Terminal Support
 - **Intelligent Color Detection** - Automatically detects terminal capabilities (8, 16, 256, or TrueColor)
 - **UTF-8 & Emoji Support** - Full Unicode support with automatic detection
@@ -11,7 +16,8 @@ A modern, interactive C++20 shell with advanced features including line editing,
 
 ### ⌨️ Interactive Line Editing
 - **Tab Completion** - Smart command completion with prefix matching
-- **Command History** - Navigate previous commands with ↑/↓ arrows
+- **Persistent History** - Commands saved to `~/.homeshell_history` (last 1000 commands)
+- **History Navigation** - Use ↑/↓ arrows to browse previous commands
 - **Syntax Highlighting** - Commands highlighted in real-time
 - **Emacs Keybindings** - Ctrl+A, Ctrl+E, Ctrl+W, and more
 
@@ -46,6 +52,21 @@ make
 # Format code (optional)
 make format
 ```
+
+### Setup for Ping Command (Optional)
+
+The `ping` command uses raw ICMP sockets which require special privileges. Grant the necessary capability:
+
+```bash
+# Grant CAP_NET_RAW capability to the binary
+sudo setcap cap_net_raw+ep ./homeshell-linux
+
+# Verify the capability was set
+getcap ./homeshell-linux
+# Should output: ./homeshell-linux = cap_net_raw+ep
+```
+
+Without this capability, ping will show an error. All other commands work without special privileges.
 
 ### Run
 
@@ -108,6 +129,13 @@ homeshell> cd src
 homeshell> pwd
 /home/user/projects/src
 
+homeshell> ping 127.0.0.1 3
+PING 127.0.0.1 (3 packets):
+Reply from 127.0.0.1: seq=1 time=0.05ms
+Reply from 127.0.0.1: seq=2 time=0.04ms
+Reply from 127.0.0.1: seq=3 time=0.06ms
+(Press CTRL-C to cancel at any time)
+
 homeshell> exit
 ```
 
@@ -133,6 +161,8 @@ homeshell> help
 | `pwd` | Print working directory | Sync |
 | `ls` | List directory contents | Sync |
 | `cd` | Change current directory | Sync |
+| `datetime` | Show current date/time in ISO format | Sync |
+| `ping` | Ping a host | Async |
 | `sleep` | Sleep for N seconds (async demo) | Async |
 
 #### Filesystem Commands
@@ -142,6 +172,9 @@ homeshell> help
 - Directories shown in **blue**, symlinks in **cyan**
 - Options:
   - `-l, --long` - Show detailed listing with permissions and sizes
+  - `-h` - Human-readable file sizes (use with `-l`)
+  - `--help` - Show help message
+- Flags can be combined: `ls -lh` or `ls -hl`
 
 **`cd [directory]`**
 - Change current working directory
@@ -150,6 +183,20 @@ homeshell> help
 
 **`pwd`**
 - Print the current working directory
+
+**`datetime`**
+- Show current date and time in ISO 8601 format
+- Format: `YYYY-MM-DDTHH:MM:SS.mmm`
+- Example output: `2025-11-21T14:30:25.123`
+
+**`ping <host> [count]`**
+- Ping a network host using ICMP echo (async command)
+- **Built-in ICMP implementation** - no external ping utility required
+- Default count: 4 packets
+- Example: `ping google.com 5`
+- **Supports cancellation** with CTRL-C
+- **Note**: Requires root privileges or `CAP_NET_RAW` capability on Linux
+  - Run with `sudo` or set capability: `sudo setcap cap_net_raw+ep ./homeshell-linux`
 
 ## Configuration
 
@@ -164,6 +211,8 @@ Configuration is loaded from JSON files. Example (`config/homeshell.json`):
 ### Configuration Options
 
 - `prompt_format` - Custom prompt string with token support
+- `history_file` - Path to command history file (default: `~/.homeshell_history`)
+- `motd` - Message of the Day displayed on shell startup (supports `\n` for newlines)
 
 #### Prompt Tokens
 
@@ -181,21 +230,32 @@ The `prompt_format` supports the following tokens:
 
 ```json
 {
-  "prompt_format": "homeshell> "
+  "prompt_format": "homeshell> ",
+  "history_file": "~/.homeshell_history",
+  "motd": "Welcome to Homeshell!\nType 'help' for available commands."
 }
 ```
 
 ```json
 {
-  "prompt_format": "[%user%@%folder%]> "
+  "prompt_format": "[%user%@%folder%]> ",
+  "history_file": "~/.my_shell_history",
+  "motd": "🏠 Home Automation Shell v1.0\nReady for commands!"
 }
 ```
 
 ```json
 {
-  "prompt_format": "[%time% %path%]$ "
+  "prompt_format": "[%time% %path%]$ ",
+  "history_file": "/tmp/homeshell_history",
+  "motd": ""
 }
 ```
+
+**Notes:**
+- To disable the MOTD, set it to an empty string `""`
+- Use `\n` for line breaks in the MOTD
+- Emoji support detection message is shown if terminal supports it (unless already in MOTD)
 
 ## Cross-Platform Filesystem Support
 
@@ -281,6 +341,41 @@ auto& registry = CommandRegistry::getInstance();
 registry.registerCommand(std::make_shared<MyCommand>());
 ```
 
+### Cancellable Commands
+
+Commands can support cancellation (CTRL-C handling):
+
+```cpp
+class MyCommand : public ICommand
+{
+public:
+    MyCommand() : cancelled_(false) {}
+
+    bool supportsCancellation() const override
+    {
+        return true;
+    }
+
+    void cancel() override
+    {
+        cancelled_.store(true);
+    }
+
+    Status execute(const CommandContext& context) override
+    {
+        while (!cancelled_.load())
+        {
+            // Do work, checking cancellation periodically
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        return Status::error("Cancelled");
+    }
+
+private:
+    std::atomic<bool> cancelled_;
+};
+```
+
 ### Asynchronous Commands
 
 For long-running operations, use `CommandType::Asynchronous`:
@@ -330,17 +425,20 @@ homeshell/
 │   ├── Command.hpp             # Command interface & registry
 │   ├── Config.hpp              # Configuration management
 │   ├── FilesystemHelper.hpp    # Cross-platform filesystem ops
+│   ├── IcmpPing.hpp            # Raw ICMP ping implementation
 │   ├── PromptFormatter.hpp     # Prompt token replacement
-│   ├── Shell.hpp               # Interactive shell REPL
+│   ├── Shell.hpp               # Interactive shell REPL with signal handling
 │   ├── Status.hpp              # Status/error handling
 │   ├── TerminalInfo.hpp        # Terminal capability detection
 │   ├── version.h.in            # Version template
 │   └── commands/               # Built-in commands
 │       ├── CdCommand.hpp       # Change directory
+│       ├── DateTimeCommand.hpp # Show date/time
 │       ├── EchoCommand.hpp     # Echo arguments
 │       ├── ExitCommand.hpp     # Exit shell
 │       ├── HelpCommand.hpp     # Show help
 │       ├── LsCommand.hpp       # List directory
+│       ├── PingCommand.hpp     # Ping network host
 │       ├── PwdCommand.hpp      # Print working dir
 │       └── SleepCommand.hpp    # Async demo
 ├── src/
@@ -350,6 +448,7 @@ homeshell/
 │   ├── CMakeLists.txt
 │   ├── test_config.cpp
 │   ├── test_filesystem_helper.cpp
+│   ├── test_ls_command.cpp
 │   ├── test_prompt_formatter.cpp
 │   └── test_status.cpp
 └── external/                   # Git submodules
@@ -386,10 +485,11 @@ ctest --output-on-failure
 ```
 
 Test coverage includes:
-- **Status** - Status codes and error handling
-- **Config** - Configuration loading and parsing
-- **FilesystemHelper** - Cross-platform filesystem operations
-- **PromptFormatter** - Prompt token replacement
+- **Status** - Status codes and error handling (4 tests)
+- **Config** - Configuration loading and parsing (4 tests)
+- **FilesystemHelper** - Cross-platform filesystem operations (6 tests)
+- **PromptFormatter** - Prompt token replacement (7 tests)
+- **LsCommand** - Directory listing with flags (10 tests)
 
 ### Code Formatting
 
