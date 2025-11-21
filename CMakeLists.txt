@@ -21,6 +21,9 @@ configure_file(
     @ONLY
 )
 
+# Add CLI11 for command-line argument parsing
+add_subdirectory(external/CLI11)
+
 # Library target
 add_library(homeshell
     src/Homeshell.cpp
@@ -43,6 +46,7 @@ add_executable(homeshell-linux
 target_link_libraries(homeshell-linux
     PRIVATE
         homeshell
+        CLI11::CLI11
 )
 
 # Find clang-format
