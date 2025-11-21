@@ -1,7 +1,9 @@
 #pragma once
 
 #include <homeshell/Command.hpp>
+
 #include <fmt/core.h>
+
 #include <iostream>
 
 namespace homeshell
@@ -41,4 +43,3 @@ public:
 };
 
 } // namespace homeshell
-

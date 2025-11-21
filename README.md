@@ -56,6 +56,10 @@ make format
 # With custom config
 ./homeshell-linux --config ../config/homeshell.json
 
+# Execute a command and exit
+./homeshell-linux -e "pwd"
+./homeshell-linux --execute "ls -l"
+
 # Show version
 ./homeshell-linux --version
 
@@ -85,9 +89,24 @@ Available commands:
 homeshell> echo Hello World 🚀
 Hello World 🚀
 
-homeshell> sleep 2
-Sleeping for 2 seconds...
-Done sleeping!
+homeshell> pwd
+/home/user/projects
+
+homeshell> ls
+build/
+config/
+src/
+README.md
+
+homeshell> ls -l
+drwxrwxr-x     0 B  build/
+drwxrwxr-x     0 B  config/
+drwxrwxr-x     0 B  src/
+-rw-rw-r--  7.5 KB  README.md
+
+homeshell> cd src
+homeshell> pwd
+/home/user/projects/src
 
 homeshell> exit
 ```
@@ -111,7 +130,26 @@ homeshell> help
 | `help` | Display all available commands | Sync |
 | `exit` | Exit the shell | Sync |
 | `echo` | Echo arguments (supports emoji) | Sync |
-| `sleep` | Sleep for N seconds | Async |
+| `pwd` | Print working directory | Sync |
+| `ls` | List directory contents | Sync |
+| `cd` | Change current directory | Sync |
+| `sleep` | Sleep for N seconds (async demo) | Async |
+
+#### Filesystem Commands
+
+**`ls [options] [path]`**
+- List directory contents with color-coded output
+- Directories shown in **blue**, symlinks in **cyan**
+- Options:
+  - `-l, --long` - Show detailed listing with permissions and sizes
+
+**`cd [directory]`**
+- Change current working directory
+- `cd` with no arguments goes to home directory
+- Supports relative and absolute paths
+
+**`pwd`**
+- Print the current working directory
 
 ## Configuration
 
@@ -125,7 +163,77 @@ Configuration is loaded from JSON files. Example (`config/homeshell.json`):
 
 ### Configuration Options
 
-- `prompt_format` - Custom prompt string (supports emoji)
+- `prompt_format` - Custom prompt string with token support
+
+#### Prompt Tokens
+
+The `prompt_format` supports the following tokens:
+
+| Token | Description | Example Output |
+|-------|-------------|----------------|
+| `%user%` | Current username | `john` |
+| `%path%` | Full current path | `/home/john/projects` |
+| `%folder%` | Current folder name | `projects` |
+| `%time%` | Current time (HH:MM:SS) | `14:30:25` |
+| `%date%` | Current date (YYYY-MM-DD) | `2025-11-21` |
+
+**Example configurations:**
+
+```json
+{
+  "prompt_format": "homeshell> "
+}
+```
+
+```json
+{
+  "prompt_format": "[%user%@%folder%]> "
+}
+```
+
+```json
+{
+  "prompt_format": "[%time% %path%]$ "
+}
+```
+
+## Cross-Platform Filesystem Support
+
+Homeshell uses C++17's `<filesystem>` library for cross-platform filesystem operations. The `FilesystemHelper` class provides:
+
+- **Directory navigation** - `cd`, `pwd`
+- **Directory listing** - `ls` with color-coded output
+- **Path operations** - Absolute paths, existence checks
+- **Human-readable sizes** - Automatic formatting (B, KB, MB, GB, TB)
+- **Permission display** - Unix-style permission strings
+
+All filesystem operations work seamlessly on:
+- ✅ Linux
+- ✅ Windows
+- ✅ macOS
+
+### FilesystemHelper API
+
+For custom commands needing filesystem access:
+
+```cpp
+#include <homeshell/FilesystemHelper.hpp>
+
+// Get current directory
+auto cwd = FilesystemHelper::getCurrentDirectory();
+
+// Change directory
+FilesystemHelper::changeDirectory("/path/to/dir");
+
+// List directory contents
+auto entries = FilesystemHelper::listDirectory(".");
+
+// Check if path exists
+bool exists = FilesystemHelper::exists("/some/path");
+
+// Format file size
+std::string size = FilesystemHelper::formatSize(1024000); // "1000.0 KB"
+```
 
 ## Extending Homeshell
 
@@ -221,21 +329,33 @@ homeshell/
 ├── include/homeshell/
 │   ├── Command.hpp             # Command interface & registry
 │   ├── Config.hpp              # Configuration management
+│   ├── FilesystemHelper.hpp    # Cross-platform filesystem ops
+│   ├── PromptFormatter.hpp     # Prompt token replacement
 │   ├── Shell.hpp               # Interactive shell REPL
 │   ├── Status.hpp              # Status/error handling
 │   ├── TerminalInfo.hpp        # Terminal capability detection
 │   ├── version.h.in            # Version template
 │   └── commands/               # Built-in commands
-│       ├── EchoCommand.hpp
-│       ├── ExitCommand.hpp
-│       ├── HelpCommand.hpp
-│       └── SleepCommand.hpp
+│       ├── CdCommand.hpp       # Change directory
+│       ├── EchoCommand.hpp     # Echo arguments
+│       ├── ExitCommand.hpp     # Exit shell
+│       ├── HelpCommand.hpp     # Show help
+│       ├── LsCommand.hpp       # List directory
+│       ├── PwdCommand.hpp      # Print working dir
+│       └── SleepCommand.hpp    # Async demo
 ├── src/
 │   ├── Homeshell.cpp
 │   └── main.cpp
+├── tests/                      # Unit tests
+│   ├── CMakeLists.txt
+│   ├── test_config.cpp
+│   ├── test_filesystem_helper.cpp
+│   ├── test_prompt_formatter.cpp
+│   └── test_status.cpp
 └── external/                   # Git submodules
     ├── CLI11/                  # Command-line parsing
     ├── fmt/                    # Formatting & colors
+    ├── googletest/             # Unit testing
     ├── json/                   # JSON parsing
     └── replxx/                 # Interactive line editing
 ```
@@ -248,8 +368,28 @@ All dependencies are managed as git submodules:
 - **[nlohmann/json](https://github.com/nlohmann/json)** - JSON configuration
 - **[fmt](https://github.com/fmtlib/fmt)** - Modern formatting with colors
 - **[Replxx](https://github.com/AmokHuginnsson/replxx)** - Interactive line editing
+- **[Google Test](https://github.com/google/googletest)** - Unit testing framework
 
 ## Development
+
+### Running Tests
+
+The project includes comprehensive unit tests using Google Test:
+
+```bash
+cd build
+make
+./tests/homeshell_tests
+
+# Or use CTest
+ctest --output-on-failure
+```
+
+Test coverage includes:
+- **Status** - Status codes and error handling
+- **Config** - Configuration loading and parsing
+- **FilesystemHelper** - Cross-platform filesystem operations
+- **PromptFormatter** - Prompt token replacement
 
 ### Code Formatting
 
@@ -296,6 +436,9 @@ Version components:
 - [ ] Plugin system for dynamic command loading
 - [ ] Command piping and redirection
 - [ ] Environment variable support
+- [ ] More filesystem commands (mkdir, rm, cp, mv, cat, etc.)
+- [ ] File search and filtering
+- [ ] Glob pattern support
 
 ## License
 

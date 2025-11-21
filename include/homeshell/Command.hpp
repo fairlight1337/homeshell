@@ -1,6 +1,7 @@
 #pragma once
 
 #include <homeshell/Status.hpp>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -78,4 +79,3 @@ private:
 };
 
 } // namespace homeshell
-

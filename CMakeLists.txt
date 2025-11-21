@@ -33,6 +33,14 @@ add_subdirectory(external/fmt)
 # Add replxx for interactive line editing
 add_subdirectory(external/replxx)
 
+# Add Google Test for unit testing
+option(BUILD_TESTING "Build tests" ON)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(external/googletest)
+    include(GoogleTest)
+endif()
+
 # Library target
 add_library(homeshell
     src/Homeshell.cpp
@@ -103,5 +111,10 @@ if(CLANG_TIDY_EXECUTABLE)
     message(STATUS "clang-tidy found: ${CLANG_TIDY_EXECUTABLE}")
 else()
     message(WARNING "clang-tidy not found. Static analysis will not be available.")
+endif()
+
+# Tests
+if(BUILD_TESTING)
+    add_subdirectory(tests)
 endif()
 

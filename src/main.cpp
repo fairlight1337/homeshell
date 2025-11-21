@@ -1,15 +1,19 @@
+#include <homeshell/Command.hpp>
 #include <homeshell/Config.hpp>
 #include <homeshell/Shell.hpp>
 #include <homeshell/TerminalInfo.hpp>
-#include <homeshell/Command.hpp>
-#include <homeshell/commands/HelpCommand.hpp>
-#include <homeshell/commands/ExitCommand.hpp>
+#include <homeshell/commands/CdCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
+#include <homeshell/commands/ExitCommand.hpp>
+#include <homeshell/commands/HelpCommand.hpp>
+#include <homeshell/commands/LsCommand.hpp>
+#include <homeshell/commands/PwdCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
 #include <homeshell/version.h>
 
-#include <CLI/CLI.hpp>
 #include <fmt/core.h>
+
+#include <CLI/CLI.hpp>
 #include <iostream>
 
 int main(int argc, char** argv)
@@ -29,6 +33,10 @@ int main(int argc, char** argv)
     // Add verbose flag
     bool verbose = false;
     app.add_flag("--verbose", verbose, "Enable verbose output");
+
+    // Add execute flag
+    std::string execute_command = "";
+    app.add_option("-e,--execute", execute_command, "Execute command and exit");
 
     // Parse arguments
     CLI11_PARSE(app, argc, argv);
@@ -89,8 +97,22 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<EchoCommand>());
     registry.registerCommand(std::make_shared<SleepCommand>());
 
-    // Create and run the shell
+    // Filesystem commands
+    registry.registerCommand(std::make_shared<LsCommand>());
+    registry.registerCommand(std::make_shared<CdCommand>());
+    registry.registerCommand(std::make_shared<PwdCommand>());
+
+    // Create the shell
     Shell shell(config, terminal_info);
+
+    // Execute command if -e flag was provided
+    if (!execute_command.empty())
+    {
+        Status status = shell.executeCommandLine(execute_command);
+        return status.code;
+    }
+
+    // Otherwise run interactive REPL
     shell.run();
 
     return 0;

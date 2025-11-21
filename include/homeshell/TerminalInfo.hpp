@@ -1,8 +1,9 @@
 #pragma once
 
+#include <unistd.h>
+
 #include <cstdlib>
 #include <string>
-#include <unistd.h>
 
 namespace homeshell
 {
@@ -10,10 +11,10 @@ namespace homeshell
 enum class ColorSupport
 {
     None,
-    Basic8,      // 8 colors
-    Extended16,  // 16 colors
-    Colors256,   // 256 colors
-    TrueColor    // 24-bit RGB
+    Basic8,     // 8 colors
+    Extended16, // 16 colors
+    Colors256,  // 256 colors
+    TrueColor   // 24-bit RGB
 };
 
 class TerminalInfo
@@ -75,11 +76,10 @@ public:
             locale = lang;
         }
 
-        if (locale.find("UTF-8") != std::string::npos ||
-            locale.find("utf8") != std::string::npos)
+        if (locale.find("UTF-8") != std::string::npos || locale.find("utf8") != std::string::npos)
         {
             info.utf8_support_ = true;
-            info.emoji_support_ = true;  // Assume emoji if UTF-8
+            info.emoji_support_ = true; // Assume emoji if UTF-8
         }
 
         return info;
@@ -120,4 +120,3 @@ private:
 };
 
 } // namespace homeshell
-

@@ -1,21 +1,24 @@
 #pragma once
 
 #include <homeshell/Command.hpp>
+#include <homeshell/FilesystemHelper.hpp>
+
+#include <fmt/core.h>
 
 namespace homeshell
 {
 
-class ExitCommand : public ICommand
+class PwdCommand : public ICommand
 {
 public:
     std::string getName() const override
     {
-        return "exit";
+        return "pwd";
     }
 
     std::string getDescription() const override
     {
-        return "Exit the shell";
+        return "Print working directory";
     }
 
     CommandType getType() const override
@@ -25,7 +28,8 @@ public:
 
     Status execute(const CommandContext& context) override
     {
-        return Status::exit();
+        fmt::print("{}\n", FilesystemHelper::getCurrentDirectory().string());
+        return Status::ok();
     }
 };
 

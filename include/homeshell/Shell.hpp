@@ -2,17 +2,20 @@
 
 #include <homeshell/Command.hpp>
 #include <homeshell/Config.hpp>
+#include <homeshell/PromptFormatter.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/TerminalInfo.hpp>
-#include <replxx.hxx>
-#include <fmt/core.h>
+
 #include <fmt/color.h>
+#include <fmt/core.h>
+
+#include <future>
 #include <memory>
+#include <replxx.hxx>
 #include <sstream>
 #include <string>
-#include <vector>
-#include <future>
 #include <thread>
+#include <vector>
 
 namespace homeshell
 {
@@ -76,6 +79,11 @@ public:
         }
     }
 
+    Status executeCommandLine(const std::string& command_line)
+    {
+        return executeCommand(command_line);
+    }
+
 private:
     void setupReplxx()
     {
@@ -87,11 +95,8 @@ private:
         replxx_.set_word_break_characters(" \t.,-%!;:=*~^'\"/?<>|[](){}");
 
         // Set up tab completion
-        replxx_.set_completion_callback(
-            [this](const std::string& context, int& contextLen)
-            {
-                return getCompletions(context, contextLen);
-            });
+        replxx_.set_completion_callback([this](const std::string& context, int& contextLen)
+                                        { return getCompletions(context, contextLen); });
 
         // Set up syntax highlighting if colors are supported
         if (terminal_info_.hasColorSupport())
@@ -128,22 +133,24 @@ private:
 
     std::string getPrompt() const
     {
+        // Format the prompt with tokens replaced
+        std::string formatted_prompt = PromptFormatter::format(config_.prompt_format);
+
         if (terminal_info_.hasColorSupport())
         {
             return fmt::format(fg(fmt::color::green) | fmt::emphasis::bold, "{}", 
-                             config_.prompt_format);
+                             formatted_prompt);
         }
-        return config_.prompt_format;
+        return formatted_prompt;
     }
 
     void printWelcome()
     {
         if (terminal_info_.hasColorSupport())
         {
-            fmt::print(fg(fmt::color::cyan) | fmt::emphasis::bold,
-                      "Welcome to Homeshell!\n");
+            fmt::print(fg(fmt::color::cyan) | fmt::emphasis::bold, "Welcome to Homeshell!\n");
             fmt::print("Type {} for available commands.\n\n",
-                      fmt::format(fg(fmt::color::yellow), "'help'"));
+                       fmt::format(fg(fmt::color::yellow), "'help'"));
         }
         else
         {
@@ -157,8 +164,7 @@ private:
         }
     }
 
-    replxx::Replxx::completions_t getCompletions(const std::string& context, 
-                                                   int& contextLen)
+    replxx::Replxx::completions_t getCompletions(const std::string& context, int& contextLen)
     {
         replxx::Replxx::completions_t completions;
 
@@ -214,7 +220,7 @@ private:
         // Execute command
         CommandContext context;
         context.args = args;
-        context.verbose = false;  // Could be set from config or flag
+        context.verbose = false; // Could be set from config or flag
 
         if (command->getType() == CommandType::Asynchronous)
         {
@@ -226,15 +232,11 @@ private:
         }
     }
 
-    Status executeAsync(std::shared_ptr<ICommand> command, 
-                       const CommandContext& context)
+    Status executeAsync(std::shared_ptr<ICommand> command, const CommandContext& context)
     {
         // Launch async task
-        auto future = std::async(std::launch::async, 
-            [command, context]()
-            {
-                return command->execute(context);
-            });
+        auto future = std::async(std::launch::async,
+                                 [command, context]() { return command->execute(context); });
 
         // For now, just wait for completion
         // In a more sophisticated version, we could allow multiple
@@ -262,4 +264,3 @@ private:
 };
 
 } // namespace homeshell
-

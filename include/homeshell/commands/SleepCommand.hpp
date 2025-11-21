@@ -1,7 +1,9 @@
 #pragma once
 
 #include <homeshell/Command.hpp>
+
 #include <fmt/core.h>
+
 #include <chrono>
 #include <thread>
 
@@ -49,4 +51,3 @@ public:
 };
 
 } // namespace homeshell
-

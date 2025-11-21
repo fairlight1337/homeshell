@@ -1,8 +1,9 @@
 #pragma once
 
 #include <homeshell/Command.hpp>
-#include <fmt/core.h>
+
 #include <fmt/color.h>
+#include <fmt/core.h>
 
 namespace homeshell
 {
@@ -32,9 +33,8 @@ public:
         auto& registry = CommandRegistry::getInstance();
         for (const auto& pair : registry.getAll())
         {
-            fmt::print("  {:<15} - {}\n", 
-                      fmt::format(fg(fmt::color::cyan), "{}", pair.first),
-                      pair.second->getDescription());
+            fmt::print("  {:<15} - {}\n", fmt::format(fg(fmt::color::cyan), "{}", pair.first),
+                       pair.second->getDescription());
         }
 
         fmt::print("\n");
@@ -43,4 +43,3 @@ public:
 };
 
 } // namespace homeshell
-
