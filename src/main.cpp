@@ -1,7 +1,15 @@
 #include <homeshell/Config.hpp>
-#include <homeshell/Homeshell.hpp>
+#include <homeshell/Shell.hpp>
+#include <homeshell/TerminalInfo.hpp>
+#include <homeshell/Command.hpp>
+#include <homeshell/commands/HelpCommand.hpp>
+#include <homeshell/commands/ExitCommand.hpp>
+#include <homeshell/commands/EchoCommand.hpp>
+#include <homeshell/commands/SleepCommand.hpp>
+#include <homeshell/version.h>
 
 #include <CLI/CLI.hpp>
+#include <fmt/core.h>
 #include <iostream>
 
 int main(int argc, char** argv)
@@ -29,8 +37,21 @@ int main(int argc, char** argv)
     if (show_version)
     {
         Version version;
-        std::cout << "Homeshell v" << version.getVersionString() << std::endl;
+        fmt::print("Homeshell v{}\n", version.getVersionString());
         return 0;
+    }
+
+    // Detect terminal capabilities
+    TerminalInfo terminal_info = TerminalInfo::detect();
+
+    if (verbose)
+    {
+        fmt::print("Terminal Info:\n");
+        fmt::print("  TTY: {}\n", terminal_info.isTTY() ? "yes" : "no");
+        fmt::print("  Colors: {}\n", terminal_info.hasColorSupport() ? "yes" : "no");
+        fmt::print("  UTF-8: {}\n", terminal_info.hasUTF8Support() ? "yes" : "no");
+        fmt::print("  Emoji: {}\n", terminal_info.hasEmojiSupport() ? "yes" : "no");
+        fmt::print("\n");
     }
 
     // Load configuration
@@ -42,13 +63,13 @@ int main(int argc, char** argv)
             config = Config::loadFromFile(config_file);
             if (verbose)
             {
-                std::cout << "Loaded config from: " << config_file << std::endl;
-                std::cout << "Prompt format: " << config.prompt_format << std::endl;
+                fmt::print("Loaded config from: {}\n", config_file);
+                fmt::print("Prompt format: {}\n", config.prompt_format);
             }
         }
         catch (const std::exception& e)
         {
-            std::cerr << "Error loading config: " << e.what() << std::endl;
+            fmt::print(stderr, "Error loading config: {}\n", e.what());
             return 1;
         }
     }
@@ -57,10 +78,20 @@ int main(int argc, char** argv)
         config = Config::loadDefault();
         if (verbose)
         {
-            std::cout << "Using default configuration" << std::endl;
+            fmt::print("Using default configuration\n");
         }
     }
 
-    Homeshell homeshell;
-    return homeshell.run().code;
+    // Register built-in commands
+    auto& registry = CommandRegistry::getInstance();
+    registry.registerCommand(std::make_shared<HelpCommand>());
+    registry.registerCommand(std::make_shared<ExitCommand>());
+    registry.registerCommand(std::make_shared<EchoCommand>());
+    registry.registerCommand(std::make_shared<SleepCommand>());
+
+    // Create and run the shell
+    Shell shell(config, terminal_info);
+    shell.run();
+
+    return 0;
 }

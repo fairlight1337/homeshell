@@ -27,6 +27,12 @@ add_subdirectory(external/CLI11)
 # Add nlohmann/json for JSON parsing
 add_subdirectory(external/json)
 
+# Add fmt for modern formatting with color support
+add_subdirectory(external/fmt)
+
+# Add replxx for interactive line editing
+add_subdirectory(external/replxx)
+
 # Library target
 add_library(homeshell
     src/Homeshell.cpp
@@ -51,6 +57,8 @@ target_link_libraries(homeshell-linux
         homeshell
         CLI11::CLI11
         nlohmann_json::nlohmann_json
+        fmt::fmt
+        replxx
 )
 
 # Find clang-format
