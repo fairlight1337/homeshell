@@ -199,9 +199,15 @@ Tab completion works for:
 | `touch` | Create or update a file | Sync |
 | `rm` | Remove files or directories | Sync |
 | `file` | Determine file type (magic detection) | Sync |
+| `tree` | Display directory tree structure | Sync |
+| `zip` | Create zip archives | Sync |
+| `unzip` | Extract zip archives | Sync |
+| `zipinfo` | List zip archive contents | Sync |
 | `mount` | Mount encrypted storage | Sync |
 | `unmount` | Unmount encrypted storage | Sync |
 | `vfs` | Show virtual filesystem info | Sync |
+| `top` | Display running processes | Sync |
+| `kill` | Send signal to a process | Sync |
 | `datetime` | Show current date/time in ISO format | Sync |
 | `ping` | Ping a host | Async |
 | `sleep` | Sleep for N seconds (async demo) | Async |
@@ -252,6 +258,59 @@ Tab completion works for:
 - **Warning**: This operation is permanent!
 - Works with both regular and virtual encrypted paths
 - Example: `rm oldfile.txt` or `rm /secure/tempdir`
+
+**`tree [path]`**
+- Display directory tree structure with visual formatting
+- Shows directories in **blue bold**, files in normal text
+- Recursively displays all subdirectories and files
+- Displays summary with total directory and file count
+- Example: `tree` or `tree /secure`
+
+#### Archive Commands
+
+**`zip <archive.zip> <file1> [file2 ...]`**
+- Create a ZIP archive containing the specified files and directories
+- Automatically handles directory recursion
+- Preserves directory structure by default
+- Example: `zip backup.zip file1.txt dir1/ file2.txt`
+
+**`unzip <archive.zip> [-o <destination>] [-j]`**
+- Extract files from a ZIP archive
+- Options:
+  - `-o <destination>` - Extract to specified directory (default: current directory)
+  - `-j` - Junk paths (don't preserve directory structure, extract all files to destination)
+- Automatically creates necessary parent directories
+- Example: `unzip backup.zip`, `unzip backup.zip -o /tmp/extracted`, `unzip backup.zip -j -o flat/`
+
+**`zipinfo <archive.zip>`**
+- List contents and structure of a ZIP archive
+- Displays:
+  - Compressed and uncompressed sizes
+  - Compression ratio for each file
+  - Directory structure
+  - Total statistics
+- Example: `zipinfo backup.zip`
+
+#### System Commands
+
+**`top`**
+- Display running processes (Linux only)
+- Shows PID, state, CPU usage, memory usage, and command
+- Processes sorted by CPU usage (highest first)
+- Displays top 25 processes
+- Color-coded CPU usage:
+  - **Red**: > 50% CPU
+  - **Yellow**: 20-50% CPU  
+  - **White**: < 20% CPU
+- Example: `top`
+
+**`kill [-s SIGNAL] <pid> [pid2 ...]`**
+- Send signal to one or more processes
+- Options:
+  - `-s SIGNAL` - Specify signal to send (TERM, KILL, HUP, INT, QUIT, STOP, CONT)
+  - `-SIGNAL` - Alternative format (e.g., `-9` for SIGKILL, `-KILL`)
+- Default signal: SIGTERM (graceful termination)
+- Example: `kill 1234`, `kill -9 1234`, `kill -s KILL 1234 5678`
 
 **`datetime`**
 - Show current date and time in ISO 8601 format
@@ -672,6 +731,8 @@ All dependencies are managed as git submodules:
 - **[nlohmann/json](https://github.com/nlohmann/json)** - JSON configuration
 - **[fmt](https://github.com/fmtlib/fmt)** - Modern formatting with colors
 - **[Replxx](https://github.com/AmokHuginnsson/replxx)** - Interactive line editing
+- **[SQLCipher](https://github.com/sqlcipher/sqlcipher)** - Encrypted database storage
+- **[miniz](https://github.com/richgel999/miniz)** - ZIP archive compression/decompression
 - **[Google Test](https://github.com/google/googletest)** - Unit testing framework
 
 ## Development

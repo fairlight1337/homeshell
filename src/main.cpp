@@ -12,6 +12,7 @@
 #include <homeshell/commands/ExitCommand.hpp>
 #include <homeshell/commands/FileCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
+#include <homeshell/commands/KillCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
 #include <homeshell/commands/MkdirCommand.hpp>
 #include <homeshell/commands/MountCommand.hpp>
@@ -19,9 +20,14 @@
 #include <homeshell/commands/PwdCommand.hpp>
 #include <homeshell/commands/RmCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
+#include <homeshell/commands/TopCommand.hpp>
 #include <homeshell/commands/TouchCommand.hpp>
+#include <homeshell/commands/TreeCommand.hpp>
 #include <homeshell/commands/UnmountCommand.hpp>
+#include <homeshell/commands/UnzipCommand.hpp>
 #include <homeshell/commands/VfsCommand.hpp>
+#include <homeshell/commands/ZipCommand.hpp>
+#include <homeshell/commands/ZipInfoCommand.hpp>
 #include <homeshell/version.h>
 
 #include <fmt/color.h>
@@ -199,6 +205,12 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<TouchCommand>());
     registry.registerCommand(std::make_shared<RmCommand>());
     registry.registerCommand(std::make_shared<FileCommand>());
+    registry.registerCommand(std::make_shared<TreeCommand>());
+
+    // Archive commands
+    registry.registerCommand(std::make_shared<ZipCommand>());
+    registry.registerCommand(std::make_shared<UnzipCommand>());
+    registry.registerCommand(std::make_shared<ZipInfoCommand>());
 
     // Virtual filesystem commands
     registry.registerCommand(std::make_shared<MountCommand>());
@@ -207,6 +219,10 @@ int main(int argc, char** argv)
 
     // Network commands
     registry.registerCommand(std::make_shared<PingCommand>());
+
+    // System commands
+    registry.registerCommand(std::make_shared<TopCommand>());
+    registry.registerCommand(std::make_shared<KillCommand>());
 
     // Create the shell
     Shell shell(config, terminal_info);

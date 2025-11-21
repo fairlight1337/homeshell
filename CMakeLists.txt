@@ -37,6 +37,9 @@ add_subdirectory(external/replxx)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/sqlcipher)
 
+# Add miniz for zip/unzip functionality
+add_subdirectory(external/miniz)
+
 # Add Google Test for unit testing
 option(BUILD_TESTING "Build tests" ON)
 if(BUILD_TESTING)
@@ -79,6 +82,7 @@ target_link_libraries(homeshell-linux
         nlohmann_json::nlohmann_json
         fmt::fmt
         replxx
+        miniz
 )
 
 # Find clang-format

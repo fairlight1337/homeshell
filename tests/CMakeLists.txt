@@ -9,6 +9,9 @@ add_executable(homeshell_tests
     test_mkdir_touch_rm_commands.cpp
     test_encrypted_mount.cpp
     test_virtual_filesystem.cpp
+    test_archive_commands.cpp
+    test_tree_command.cpp
+    test_system_commands.cpp
 )
 
 # Disable clang-tidy for tests
@@ -21,6 +24,7 @@ target_link_libraries(homeshell_tests
         gtest_main
         nlohmann_json::nlohmann_json
         fmt::fmt
+        miniz
 )
 
 target_include_directories(homeshell_tests
