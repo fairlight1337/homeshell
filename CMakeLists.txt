@@ -33,6 +33,10 @@ add_subdirectory(external/fmt)
 # Add replxx for interactive line editing
 add_subdirectory(external/replxx)
 
+# Add SQLCipher for encrypted storage
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/sqlcipher)
+
 # Add Google Test for unit testing
 option(BUILD_TESTING "Build tests" ON)
 if(BUILD_TESTING)
@@ -44,12 +48,15 @@ endif()
 # Library target
 add_library(homeshell
     src/Homeshell.cpp
+    src/EncryptedMount.cpp
+    src/VirtualFilesystem.cpp
 )
 
 target_include_directories(homeshell
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/sqlcipher>
         $<INSTALL_INTERFACE:include>
 )
 
@@ -58,6 +65,11 @@ target_compile_features(homeshell PUBLIC cxx_std_20)
 # Executable target
 add_executable(homeshell-linux
     src/main.cpp
+)
+
+target_link_libraries(homeshell
+    PUBLIC
+        sqlcipher
 )
 
 target_link_libraries(homeshell-linux

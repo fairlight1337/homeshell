@@ -1,7 +1,7 @@
 #pragma once
 
 #include <homeshell/Command.hpp>
-#include <homeshell/FilesystemHelper.hpp>
+#include <homeshell/VirtualFilesystem.hpp>
 
 #include <fmt/core.h>
 
@@ -29,6 +29,7 @@ public:
     Status execute(const CommandContext& context) override
     {
         std::string target;
+        auto& vfs = VirtualFilesystem::getInstance();
 
         if (context.args.empty())
         {
@@ -55,18 +56,19 @@ public:
         }
 
         // Check if target exists and is a directory
-        if (!FilesystemHelper::exists(target))
+        if (!vfs.exists(target))
         {
             return Status::error("Directory does not exist: " + target);
         }
 
-        if (!FilesystemHelper::isDirectory(target))
+        if (!vfs.isDirectory(target))
         {
             return Status::error("Not a directory: " + target);
         }
 
         // Change directory
-        if (!FilesystemHelper::changeDirectory(target))
+        std::string result_path;
+        if (!vfs.changeDirectory(target, result_path))
         {
             return Status::error("Failed to change directory to: " + target);
         }
@@ -74,7 +76,7 @@ public:
         // Optionally show new directory
         if (context.verbose)
         {
-            fmt::print("Changed to: {}\n", FilesystemHelper::getCurrentDirectory().string());
+            fmt::print("Changed to: {}\n", result_path);
         }
 
         return Status::ok();

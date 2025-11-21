@@ -3,15 +3,27 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <vector>
 
 namespace homeshell
 {
+
+struct MountConfig
+{
+    std::string name;
+    std::string db_path;
+    std::string mount_point;
+    std::string password;
+    int64_t max_size_mb = 100; // Default 100MB
+    bool auto_mount = true;
+};
 
 struct Config
 {
     std::string prompt_format = "$ ";
     std::string history_file = "~/.homeshell_history";
     std::string motd = "Welcome to Homeshell!\nType 'help' for available commands.";
+    std::vector<MountConfig> encrypted_mounts;
 
     static Config loadFromFile(const std::string& filepath)
     {
@@ -39,6 +51,40 @@ struct Config
         if (j.contains("motd"))
         {
             config.motd = j["motd"].get<std::string>();
+        }
+
+        if (j.contains("encrypted_mounts") && j["encrypted_mounts"].is_array())
+        {
+            for (const auto& mount_json : j["encrypted_mounts"])
+            {
+                MountConfig mount;
+                if (mount_json.contains("name"))
+                {
+                    mount.name = mount_json["name"].get<std::string>();
+                }
+                if (mount_json.contains("db_path"))
+                {
+                    mount.db_path = mount_json["db_path"].get<std::string>();
+                }
+                if (mount_json.contains("mount_point"))
+                {
+                    mount.mount_point = mount_json["mount_point"].get<std::string>();
+                }
+                if (mount_json.contains("password"))
+                {
+                    mount.password = mount_json["password"].get<std::string>();
+                }
+                if (mount_json.contains("max_size_mb"))
+                {
+                    mount.max_size_mb = mount_json["max_size_mb"].get<int64_t>();
+                }
+                if (mount_json.contains("auto_mount"))
+                {
+                    mount.auto_mount = mount_json["auto_mount"].get<bool>();
+                }
+
+                config.encrypted_mounts.push_back(mount);
+            }
         }
 
         return config;

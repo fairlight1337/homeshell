@@ -31,6 +31,14 @@ A modern, interactive C++20 shell with advanced features including line editing,
 - **Customizable Prompt** - Define your own prompt format
 - **Sensible Defaults** - Works out of the box without configuration
 
+### 🔐 Encrypted Storage
+- **SQLCipher Integration** - Secure block-level encryption using SQLCipher
+- **Virtual Filesystem** - Mount encrypted storage as virtual paths within the shell
+- **Password Protection** - AES-256 encryption with password-based key derivation
+- **Automatic Growth** - Storage grows dynamically up to configured quotas
+- **Auto-mounting** - Configure mounts to load automatically on startup
+- **Full File Operations** - All filesystem commands work transparently with encrypted mounts
+
 ## Quick Start
 
 ### Clone & Build
@@ -43,7 +51,13 @@ cd homeshell
 # Initialize submodules
 git submodule update --init --recursive
 
-# Build
+# Build SQLCipher (required for encrypted storage)
+cd external/sqlcipher
+./configure CFLAGS="-DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=2" LDFLAGS="-lcrypto"
+make sqlite3.c
+cd ../..
+
+# Build Homeshell
 mkdir build
 cd build
 cmake ..
@@ -161,6 +175,13 @@ homeshell> help
 | `pwd` | Print working directory | Sync |
 | `ls` | List directory contents | Sync |
 | `cd` | Change current directory | Sync |
+| `cat` | Display file contents | Sync |
+| `mkdir` | Create a directory | Sync |
+| `touch` | Create or update a file | Sync |
+| `rm` | Remove files or directories | Sync |
+| `mount` | Mount encrypted storage | Sync |
+| `unmount` | Unmount encrypted storage | Sync |
+| `vfs` | Show virtual filesystem info | Sync |
 | `datetime` | Show current date/time in ISO format | Sync |
 | `ping` | Ping a host | Async |
 | `sleep` | Sleep for N seconds (async demo) | Async |
@@ -183,6 +204,27 @@ homeshell> help
 
 **`pwd`**
 - Print the current working directory
+
+**`cat <file>`**
+- Display the contents of a file
+- Works with both regular and virtual encrypted paths
+- Example: `cat myfile.txt` or `cat /secure/data.txt`
+
+**`mkdir <directory>`**
+- Create a new directory
+- Works with both regular and virtual encrypted paths
+- Example: `mkdir mydir` or `mkdir /secure/newdir`
+
+**`touch <file>`**
+- Create a new empty file or update timestamp
+- Works with both regular and virtual encrypted paths
+- Example: `touch newfile.txt` or `touch /secure/note.txt`
+
+**`rm <path>`**
+- Remove files or directories recursively
+- **Warning**: This operation is permanent!
+- Works with both regular and virtual encrypted paths
+- Example: `rm oldfile.txt` or `rm /secure/tempdir`
 
 **`datetime`**
 - Show current date and time in ISO 8601 format
@@ -256,6 +298,137 @@ The `prompt_format` supports the following tokens:
 - To disable the MOTD, set it to an empty string `""`
 - Use `\n` for line breaks in the MOTD
 - Emoji support detection message is shown if terminal supports it (unless already in MOTD)
+
+### Encrypted Storage Configuration
+
+Homeshell supports encrypted virtual filesystems using SQLCipher. Configure mounts in your JSON config:
+
+```json
+{
+  "prompt_format": "homeshell> ",
+  "history_file": "~/.homeshell_history",
+  "motd": "Welcome to Homeshell!",
+  "encrypted_mounts": [
+    {
+      "name": "secure",
+      "db_path": "~/.homeshell/secure.db",
+      "mount_point": "/secure",
+      "password": "",
+      "max_size_mb": 100,
+      "auto_mount": true
+    }
+  ]
+}
+```
+
+**Password Options:**
+1. **Empty password** (recommended): Prompts securely on startup
+   ```json
+   "password": ""
+   ```
+
+2. **Plaintext password**: Stored in config (less secure but convenient)
+   ```json
+   "password": "my-secure-password"
+   ```
+
+3. **Omit password field**: Also triggers secure prompt
+   ```json
+   {
+     "name": "secure",
+     "db_path": "~/.homeshell/secure.db",
+     "mount_point": "/secure"
+   }
+   ```
+
+#### Mount Configuration Options
+
+- `name` - Unique name for the mount
+- `db_path` - Path to the encrypted database file (supports `~` expansion)
+- `mount_point` - Virtual path where the mount appears (e.g., `/secure`)
+- `password` - Encryption password (AES-256 via SQLCipher) - **optional, prompts if empty**
+- `max_size_mb` - Maximum storage size in MB (default: 100)
+- `auto_mount` - Mount automatically on startup (default: true)
+
+**Password Security:**
+- If `password` is empty or omitted in config, you'll be prompted interactively
+- Password input is hidden (no echo to terminal)
+- Passwords are **never stored in shell history**
+- For non-interactive use, password must be in config or environment
+
+#### Working with Encrypted Storage
+
+Once mounted, encrypted storage appears as a virtual filesystem path. All filesystem commands work transparently:
+
+```
+homeshell> vfs
+Virtual Filesystems:
+
+secure
+  Mount Point: /secure
+  Database:    /home/user/.homeshell/secure.db
+  Used:        1.25 MB / 100.00 MB (1.2%)
+
+homeshell> cd /secure
+homeshell> pwd
+/secure
+
+homeshell> touch secret.txt
+File 'secret.txt' created
+
+homeshell> ls
+secret.txt
+
+homeshell> echo "This is encrypted" > secret.txt
+homeshell> cat secret.txt
+This is encrypted
+
+homeshell> mkdir data
+Directory 'data' created
+
+homeshell> cd data
+homeshell> touch file1.txt file2.txt
+homeshell> ls -l
+-          0  file1.txt
+-          0  file2.txt
+```
+
+#### Manual Mount/Unmount
+
+You can also mount encrypted storage manually during a session:
+
+```bash
+# With password on command line (NOT RECOMMENDED - visible in history)
+homeshell> mount backup ~/.homeshell/backup.db /backup mypassword 50
+Successfully mounted 'backup' at '/backup'
+
+# Secure: Password prompted (recommended)
+homeshell> mount backup ~/.homeshell/backup.db /backup
+Enter password for mount 'backup': ********
+Successfully mounted 'backup' at '/backup'
+
+# Unmount
+homeshell> unmount backup
+Successfully unmounted 'backup'
+```
+
+**Security Note:** Omitting the password triggers a secure prompt where your input is hidden. This is the **recommended approach** to avoid passwords appearing in shell history.
+
+#### Security Features
+
+- **AES-256 Encryption** - Industry-standard encryption via SQLCipher
+- **Block-level Encryption** - Efficient partial updates without re-encrypting entire file
+- **Password-based Key Derivation** - PBKDF2 with configurable iterations
+- **No Cleartext Storage** - Data is encrypted at rest in the database
+- **In-process Only** - Encrypted mounts are not accessible outside the shell
+- **Automatic Growth** - Storage grows dynamically up to the configured quota
+
+#### Storage Limits
+
+- Each mount has a configurable maximum size (`max_size_mb`)
+- Storage grows automatically as files are added
+- When quota is reached, write operations will fail
+- Use `vfs` command to monitor storage usage
 
 ## Cross-Platform Filesystem Support
 

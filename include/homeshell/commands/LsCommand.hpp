@@ -2,6 +2,7 @@
 
 #include <homeshell/Command.hpp>
 #include <homeshell/FilesystemHelper.hpp>
+#include <homeshell/VirtualFilesystem.hpp>
 
 #include <fmt/color.h>
 #include <fmt/core.h>
@@ -95,18 +96,20 @@ public:
         }
 
         // Check if path exists
-        if (!FilesystemHelper::exists(path))
+        auto& vfs = VirtualFilesystem::getInstance();
+
+        if (!vfs.exists(path))
         {
             return Status::error("Path does not exist: " + path);
         }
 
-        if (!FilesystemHelper::isDirectory(path))
+        if (!vfs.isDirectory(path))
         {
             return Status::error("Not a directory: " + path);
         }
 
         // Get directory contents
-        auto entries = FilesystemHelper::listDirectory(path);
+        auto entries = vfs.listDirectory(path);
 
         if (entries.empty())
         {
@@ -142,17 +145,13 @@ private:
         fmt::print("  ls -lh /home/user\n");
     }
 
-    void displaySimple(const std::vector<FileInfo>& entries) const
+    void displaySimple(const std::vector<VirtualFileInfo>& entries) const
     {
         for (const auto& entry : entries)
         {
             if (entry.is_directory)
             {
                 fmt::print(fg(fmt::color::blue) | fmt::emphasis::bold, "{}/\n", entry.name);
-            }
-            else if (entry.is_symlink)
-            {
-                fmt::print(fg(fmt::color::cyan), "{}\n", entry.name);
             }
             else
             {
@@ -161,11 +160,11 @@ private:
         }
     }
 
-    void displayDetailed(const std::vector<FileInfo>& entries, bool human_readable) const
+    void displayDetailed(const std::vector<VirtualFileInfo>& entries, bool human_readable) const
     {
         for (const auto& entry : entries)
         {
-            char type = entry.is_directory ? 'd' : (entry.is_symlink ? 'l' : '-');
+            char type = entry.is_directory ? 'd' : '-';
 
             std::string size_str;
             if (human_readable)
@@ -177,15 +176,11 @@ private:
                 size_str = std::to_string(entry.size);
             }
 
-            fmt::print("{}{} {:>10}  ", type, entry.permissions, size_str);
+            fmt::print("{} {:>10}  ", type, size_str);
 
             if (entry.is_directory)
             {
                 fmt::print(fg(fmt::color::blue) | fmt::emphasis::bold, "{}/\n", entry.name);
-            }
-            else if (entry.is_symlink)
-            {
-                fmt::print(fg(fmt::color::cyan), "{}\n", entry.name);
             }
             else
             {

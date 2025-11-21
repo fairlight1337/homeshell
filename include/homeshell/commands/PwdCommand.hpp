@@ -1,7 +1,7 @@
 #pragma once
 
 #include <homeshell/Command.hpp>
-#include <homeshell/FilesystemHelper.hpp>
+#include <homeshell/VirtualFilesystem.hpp>
 
 #include <fmt/core.h>
 
@@ -28,7 +28,8 @@ public:
 
     Status execute(const CommandContext& context) override
     {
-        fmt::print("{}\n", FilesystemHelper::getCurrentDirectory().string());
+        auto& vfs = VirtualFilesystem::getInstance();
+        fmt::print("{}\n", vfs.getCurrentDirectory());
         return Status::ok();
     }
 };

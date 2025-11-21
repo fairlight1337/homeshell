@@ -1,5 +1,15 @@
 {
   "prompt_format": "homeshell> ",
   "history_file": "~/.homeshell_history",
-  "motd": "Welcome to Homeshell!\nType 'help' for available commands."
+  "motd": "Welcome to Homeshell!\nType 'help' for available commands.",
+  "encrypted_mounts": [
+    {
+      "name": "secure",
+      "db_path": "~/.homeshell/secure.db",
+      "mount_point": "/secure",
+      "password": "",
+      "max_size_mb": 100,
+      "auto_mount": true
+    }
+  ]
 }

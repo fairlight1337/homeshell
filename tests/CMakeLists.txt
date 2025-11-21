@@ -5,6 +5,10 @@ add_executable(homeshell_tests
     test_filesystem_helper.cpp
     test_prompt_formatter.cpp
     test_ls_command.cpp
+    test_cat_command.cpp
+    test_mkdir_touch_rm_commands.cpp
+    test_encrypted_mount.cpp
+    test_virtual_filesystem.cpp
 )
 
 # Disable clang-tidy for tests

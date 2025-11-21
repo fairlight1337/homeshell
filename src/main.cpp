@@ -1,16 +1,26 @@
 #include <homeshell/Command.hpp>
 #include <homeshell/Config.hpp>
+#include <homeshell/EncryptedMount.hpp>
+#include <homeshell/PasswordInput.hpp>
 #include <homeshell/Shell.hpp>
 #include <homeshell/TerminalInfo.hpp>
+#include <homeshell/VirtualFilesystem.hpp>
+#include <homeshell/commands/CatCommand.hpp>
 #include <homeshell/commands/CdCommand.hpp>
 #include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/ExitCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
+#include <homeshell/commands/MkdirCommand.hpp>
+#include <homeshell/commands/MountCommand.hpp>
 #include <homeshell/commands/PingCommand.hpp>
 #include <homeshell/commands/PwdCommand.hpp>
+#include <homeshell/commands/RmCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
+#include <homeshell/commands/TouchCommand.hpp>
+#include <homeshell/commands/UnmountCommand.hpp>
+#include <homeshell/commands/VfsCommand.hpp>
 #include <homeshell/version.h>
 
 #include <fmt/core.h>
@@ -92,6 +102,63 @@ int main(int argc, char** argv)
         }
     }
 
+    // Auto-mount encrypted mounts from config
+    auto& vfs = VirtualFilesystem::getInstance();
+    for (const auto& mount_config : config.encrypted_mounts)
+    {
+        if (!mount_config.auto_mount)
+        {
+            continue;
+        }
+
+        std::string expanded_path = config.expandPath(mount_config.db_path);
+        auto mount = std::make_shared<EncryptedMount>(
+            mount_config.name, expanded_path, mount_config.mount_point, mount_config.max_size_mb);
+
+        // Get password - prompt if not in config or empty
+        std::string password = mount_config.password;
+        if (password.empty())
+        {
+            // Only prompt if we have a TTY (interactive terminal)
+            if (terminal_info.isTTY())
+            {
+                std::string prompt =
+                    fmt::format("Enter password for mount '{}': ", mount_config.name);
+                password = PasswordInput::readPassword(prompt);
+
+                if (password.empty())
+                {
+                    fmt::print(stderr, "Warning: Skipping mount '{}' (empty password)\n",
+                               mount_config.name);
+                    continue;
+                }
+            }
+            else
+            {
+                fmt::print(stderr,
+                           "Warning: Skipping mount '{}' (no password in config "
+                           "and not running in interactive terminal)\n",
+                           mount_config.name);
+                continue;
+            }
+        }
+
+        if (mount->mount(password))
+        {
+            vfs.addMount(mount);
+            if (verbose)
+            {
+                fmt::print("Auto-mounted '{}' at '{}'\n", mount_config.name,
+                           mount_config.mount_point);
+            }
+        }
+        else
+        {
+            fmt::print(stderr, "Warning: Failed to auto-mount '{}' (incorrect password?)\n",
+                       mount_config.name);
+        }
+    }
+
     // Register built-in commands
     auto& registry = CommandRegistry::getInstance();
     registry.registerCommand(std::make_shared<HelpCommand>());
@@ -104,6 +171,15 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<LsCommand>());
     registry.registerCommand(std::make_shared<CdCommand>());
     registry.registerCommand(std::make_shared<PwdCommand>());
+    registry.registerCommand(std::make_shared<CatCommand>());
+    registry.registerCommand(std::make_shared<MkdirCommand>());
+    registry.registerCommand(std::make_shared<TouchCommand>());
+    registry.registerCommand(std::make_shared<RmCommand>());
+
+    // Virtual filesystem commands
+    registry.registerCommand(std::make_shared<MountCommand>());
+    registry.registerCommand(std::make_shared<UnmountCommand>());
+    registry.registerCommand(std::make_shared<VfsCommand>());
 
     // Network commands
     registry.registerCommand(std::make_shared<PingCommand>());
