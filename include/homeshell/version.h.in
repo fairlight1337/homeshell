@@ -1,0 +1,29 @@
+#pragma once
+
+#include <cstdint>
+#include <string>
+#include <sstream>
+
+namespace homeshell
+{
+
+struct Version
+{
+    uint32_t major = @PROJECT_VERSION_MAJOR@;
+    uint32_t minor = @PROJECT_VERSION_MINOR@;
+    uint32_t patch = @PROJECT_VERSION_PATCH@;
+    std::string flavor = "@PROJECT_VERSION_FLAVOR@";
+
+    std::string getVersionString() const
+    {
+        std::ostringstream oss;
+        oss << major << "." << minor << "." << patch;
+        if (!flavor.empty())
+        {
+            oss << "-" << flavor;
+        }
+        return oss.str();
+    }
+};
+
+} // namespace homeshell
