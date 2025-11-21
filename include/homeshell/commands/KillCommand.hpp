@@ -2,7 +2,9 @@
 
 #include <homeshell/Command.hpp>
 #include <homeshell/Status.hpp>
+
 #include <fmt/color.h>
+
 #include <csignal>
 #include <string>
 #include <vector>
@@ -46,13 +48,13 @@ public:
         {
             std::string signal_name = context.args[1];
             signal = parseSignal(signal_name);
-            
+
             if (signal == -1)
             {
                 fmt::print(fg(fmt::color::red), "Error: Unknown signal '{}'\n", signal_name);
                 return Status::error("Unknown signal");
             }
-            
+
             start_idx = 2;
         }
         else if (context.args[0][0] == '-' && context.args[0].size() > 1)
@@ -60,13 +62,13 @@ public:
             // Handle -SIGNAL format (e.g., -9, -KILL)
             std::string signal_str = context.args[0].substr(1);
             signal = parseSignal(signal_str);
-            
+
             if (signal == -1)
             {
                 fmt::print(fg(fmt::color::red), "Error: Unknown signal '{}'\n", signal_str);
                 return Status::error("Unknown signal");
             }
-            
+
             start_idx = 1;
         }
 
@@ -84,7 +86,7 @@ public:
             try
             {
                 int pid = std::stoi(context.args[i]);
-                
+
                 if (pid <= 0)
                 {
                     fmt::print(fg(fmt::color::red), "Error: Invalid PID {}\n", pid);
@@ -139,7 +141,7 @@ private:
                 return SIGSTOP;
             if (signal_str == "CONT" || signal_str == "18")
                 return SIGCONT;
-                
+
             return -1;
         }
     }
@@ -148,17 +150,24 @@ private:
     {
         switch (signal)
         {
-            case SIGTERM: return "SIGTERM";
-            case SIGKILL: return "SIGKILL";
-            case SIGHUP: return "SIGHUP";
-            case SIGINT: return "SIGINT";
-            case SIGQUIT: return "SIGQUIT";
-            case SIGSTOP: return "SIGSTOP";
-            case SIGCONT: return "SIGCONT";
-            default: return std::to_string(signal);
+        case SIGTERM:
+            return "SIGTERM";
+        case SIGKILL:
+            return "SIGKILL";
+        case SIGHUP:
+            return "SIGHUP";
+        case SIGINT:
+            return "SIGINT";
+        case SIGQUIT:
+            return "SIGQUIT";
+        case SIGSTOP:
+            return "SIGSTOP";
+        case SIGCONT:
+            return "SIGCONT";
+        default:
+            return std::to_string(signal);
         }
     }
 };
 
 } // namespace homeshell
-

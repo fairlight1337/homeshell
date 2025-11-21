@@ -112,7 +112,7 @@ bool EncryptedMount::unmount()
     // but we'll use sqlite3_close_v2() which handles this gracefully
     int rc = sqlite3_close_v2(db_);
     db_ = nullptr;
-    
+
     return (rc == SQLITE_OK);
 }
 

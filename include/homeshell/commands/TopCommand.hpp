@@ -2,14 +2,16 @@
 
 #include <homeshell/Command.hpp>
 #include <homeshell/Status.hpp>
+
 #include <fmt/color.h>
 #include <fmt/core.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <algorithm>
-#include <filesystem>
-#include <unistd.h>
 
 #ifdef __linux__
 #include <sys/sysinfo.h>
@@ -50,7 +52,7 @@ public:
     {
 #ifdef __linux__
         auto processes = getProcessList();
-        
+
         if (processes.empty())
         {
             fmt::print(fg(fmt::color::red), "Error: Unable to read process information\n");
@@ -60,13 +62,10 @@ public:
         // Sort by CPU usage (descending)
         std::sort(processes.begin(), processes.end(),
                   [](const ProcessInfo& a, const ProcessInfo& b)
-                  {
-                      return a.cpu_percent > b.cpu_percent;
-                  });
+                  { return a.cpu_percent > b.cpu_percent; });
 
         // Display header
-        fmt::print(fg(fmt::color::yellow) | fmt::emphasis::bold,
-                   "{:>7} {:>4} {:>6} {:>8} {}\n",
+        fmt::print(fg(fmt::color::yellow) | fmt::emphasis::bold, "{:>7} {:>4} {:>6} {:>8} {}\n",
                    "PID", "S", "CPU%", "MEM(KB)", "COMMAND");
         fmt::print(fg(fmt::color::yellow), "{}\n", std::string(60, '-'));
 
@@ -75,20 +74,20 @@ public:
         for (size_t i = 0; i < count; ++i)
         {
             const auto& proc = processes[i];
-            
+
             auto color = fmt::color::white;
             if (proc.cpu_percent > 50.0)
                 color = fmt::color::red;
             else if (proc.cpu_percent > 20.0)
                 color = fmt::color::yellow;
-            
+
             fmt::print("{:>7} {:>4} ", proc.pid, std::string(1, proc.state));
             fmt::print(fg(color), "{:>6.1f}", proc.cpu_percent);
             fmt::print(" {:>8} {}\n", proc.mem_kb, proc.command);
         }
 
         fmt::print("\nShowing {} of {} processes\n", count, processes.size());
-        
+
         return Status::ok();
 #else
         fmt::print(fg(fmt::color::red), "Error: top command is only supported on Linux\n");
@@ -101,20 +100,20 @@ private:
     std::vector<ProcessInfo> getProcessList()
     {
         std::vector<ProcessInfo> processes;
-        
+
         // Read /proc directory
         std::error_code ec;
         for (const auto& entry : std::filesystem::directory_iterator("/proc", ec))
         {
             if (!entry.is_directory())
                 continue;
-                
+
             std::string name = entry.path().filename().string();
-            
+
             // Check if directory name is a number (PID)
             if (name.empty() || !std::isdigit(name[0]))
                 continue;
-                
+
             try
             {
                 int pid = std::stoi(name);
@@ -129,7 +128,7 @@ private:
                 continue;
             }
         }
-        
+
         return processes;
     }
 
@@ -141,46 +140,46 @@ private:
         info.mem_kb = 0;
         info.state = '?';
         info.user = "?";
-        
+
         // Read /proc/[pid]/stat
         std::string stat_path = "/proc/" + std::to_string(pid) + "/stat";
         std::ifstream stat_file(stat_path);
-        
+
         if (!stat_file.is_open())
         {
             info.pid = -1;
             return info;
         }
-        
+
         std::string line;
         std::getline(stat_file, line);
-        
+
         // Parse stat file (simplified)
         size_t comm_start = line.find('(');
         size_t comm_end = line.find(')');
-        
+
         if (comm_start != std::string::npos && comm_end != std::string::npos)
         {
             info.command = line.substr(comm_start + 1, comm_end - comm_start - 1);
-            
+
             // Parse state and other fields after command
             std::istringstream iss(line.substr(comm_end + 2));
             std::string field;
             std::vector<std::string> fields;
-            
+
             // Read all fields
             while (iss >> field)
             {
                 fields.push_back(field);
             }
-            
+
             // After extracting comm (fields 1-2: pid, comm), remaining fields start from state
             // Field 0 is state (originally field 3)
             if (fields.size() > 0)
             {
                 info.state = fields[0][0];
             }
-            
+
             // RSS is field 24 overall, so at index 21 after removing pid and comm (24 - 3 = 21)
             if (fields.size() > 21)
             {
@@ -195,7 +194,7 @@ private:
                 }
             }
         }
-        
+
         // Read cmdline for full command
         std::string cmdline_path = "/proc/" + std::to_string(pid) + "/cmdline";
         std::ifstream cmdline_file(cmdline_path);
@@ -218,14 +217,13 @@ private:
                 info.command = cmdline;
             }
         }
-        
+
         // CPU calculation would require sampling over time, so we'll skip for now
         // or just show a simplified version
-        
+
         return info;
     }
 #endif
 };
 
 } // namespace homeshell
-

@@ -3,11 +3,13 @@
 #include <homeshell/Command.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/VirtualFilesystem.hpp>
+
 #include <fmt/color.h>
-#include <fstream>
-#include <vector>
-#include <string>
+
 #include <cstring>
+#include <fstream>
+#include <string>
+#include <vector>
 
 namespace homeshell
 {
@@ -46,8 +48,9 @@ public:
         {
             if (!vfs.exists(path))
             {
-                fmt::print("{}: {}\n", path,
-                           fmt::format(fg(fmt::color::red), "cannot open (No such file or directory)"));
+                fmt::print(
+                    "{}: {}\n", path,
+                    fmt::format(fg(fmt::color::red), "cannot open (No such file or directory)"));
                 all_success = false;
                 continue;
             }
@@ -129,8 +132,8 @@ private:
         const unsigned char* bytes = reinterpret_cast<const unsigned char*>(content.data());
 
         // PNG
-        if (content.size() >= 8 && bytes[0] == 0x89 && bytes[1] == 'P' && 
-            bytes[2] == 'N' && bytes[3] == 'G')
+        if (content.size() >= 8 && bytes[0] == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' &&
+            bytes[3] == 'G')
         {
             return fmt::format(fg(fmt::color::magenta), "PNG image data");
         }
@@ -259,4 +262,3 @@ private:
 };
 
 } // namespace homeshell
-

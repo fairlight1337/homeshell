@@ -3,12 +3,14 @@
 #include <homeshell/Command.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/VirtualFilesystem.hpp>
+
 #include <fmt/color.h>
 #include <miniz.h>
-#include <vector>
-#include <string>
-#include <fstream>
+
 #include <filesystem>
+#include <fstream>
+#include <string>
+#include <vector>
 
 namespace homeshell
 {
@@ -64,20 +66,19 @@ private:
 
         for (const auto& file_path : files)
         {
-            bool exists = vfs.isVirtualPath(file_path) ? 
-                         vfs.exists(file_path) : 
-                         std::filesystem::exists(file_path);
-            
+            bool exists = vfs.isVirtualPath(file_path) ? vfs.exists(file_path)
+                                                       : std::filesystem::exists(file_path);
+
             if (!exists)
             {
-                fmt::print(fg(fmt::color::yellow), "Warning: '{}' not found, skipping\n", file_path);
+                fmt::print(fg(fmt::color::yellow), "Warning: '{}' not found, skipping\n",
+                           file_path);
                 all_success = false;
                 continue;
             }
 
-            bool is_dir = vfs.isVirtualPath(file_path) ? 
-                         vfs.isDirectory(file_path) : 
-                         std::filesystem::is_directory(file_path);
+            bool is_dir = vfs.isVirtualPath(file_path) ? vfs.isDirectory(file_path)
+                                                       : std::filesystem::is_directory(file_path);
 
             if (is_dir)
             {
@@ -115,19 +116,19 @@ private:
 
         mz_zip_writer_end(&zip);
 
-        fmt::print("\n{} Created '{}' with {} file(s)\n",
-                   all_success ? "✓" : "⚠",
-                   archive_name, added_count);
+        fmt::print("\n{} Created '{}' with {} file(s)\n", all_success ? "✓" : "⚠", archive_name,
+                   added_count);
 
         return all_success ? Status::ok() : Status::error("Some files failed");
     }
 
-    bool addFileToZip(mz_zip_archive& zip, const std::string& file_path, const std::string& archive_name)
+    bool addFileToZip(mz_zip_archive& zip, const std::string& file_path,
+                      const std::string& archive_name)
     {
         auto& vfs = VirtualFilesystem::getInstance();
-        
+
         std::string content;
-        
+
         // Try VFS first (for virtual paths), then fall back to regular filesystem
         if (vfs.isVirtualPath(file_path))
         {
@@ -147,11 +148,10 @@ private:
                 return false;
             }
             content = std::string((std::istreambuf_iterator<char>(file)),
-                                 std::istreambuf_iterator<char>());
+                                  std::istreambuf_iterator<char>());
         }
 
-        if (!mz_zip_writer_add_mem(&zip, archive_name.c_str(), 
-                                   content.data(), content.size(),
+        if (!mz_zip_writer_add_mem(&zip, archive_name.c_str(), content.data(), content.size(),
                                    MZ_DEFAULT_COMPRESSION))
         {
             fmt::print(fg(fmt::color::red), "Error: Failed to add '{}' to archive\n", file_path);
@@ -161,11 +161,11 @@ private:
         return true;
     }
 
-    bool addDirectoryToZip(mz_zip_archive& zip, const std::string& dir_path, 
+    bool addDirectoryToZip(mz_zip_archive& zip, const std::string& dir_path,
                            const std::string& base_path, int& count)
     {
         auto& vfs = VirtualFilesystem::getInstance();
-        
+
         if (vfs.isVirtualPath(dir_path))
         {
             // Handle virtual directory
@@ -174,7 +174,7 @@ private:
             for (const auto& entry : entries)
             {
                 std::string full_path = dir_path + "/" + entry.name;
-                
+
                 if (entry.is_directory)
                 {
                     addDirectoryToZip(zip, full_path, base_path, count);
@@ -211,4 +211,3 @@ private:
 };
 
 } // namespace homeshell
-

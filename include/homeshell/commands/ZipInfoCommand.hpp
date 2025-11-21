@@ -2,12 +2,14 @@
 
 #include <homeshell/Command.hpp>
 #include <homeshell/Status.hpp>
+
 #include <fmt/color.h>
 #include <miniz.h>
-#include <string>
-#include <vector>
+
 #include <iomanip>
 #include <sstream>
+#include <string>
+#include <vector>
 
 namespace homeshell
 {
@@ -56,10 +58,10 @@ private:
         }
 
         int num_files = mz_zip_reader_get_num_files(&zip);
-        
+
         fmt::print(fg(fmt::color::yellow) | fmt::emphasis::bold, "Archive: {}\n", archive_name);
         fmt::print(fg(fmt::color::yellow), "{}\n", std::string(70, '-'));
-        
+
         fmt::print("{:>10}  {:>10}  {:>5}  {}\n", "Compressed", "Uncompressed", "Ratio", "Name");
         fmt::print("{}\n", std::string(70, '-'));
 
@@ -97,8 +99,8 @@ private:
             else
             {
                 // File entry
-                fmt::print("{:>10}  {:>10}  {:>4}%  {}\n",
-                           formatSize(comp_size), formatSize(uncomp_size), ratio, filename);
+                fmt::print("{:>10}  {:>10}  {:>4}%  {}\n", formatSize(comp_size),
+                           formatSize(uncomp_size), ratio, filename);
                 total_compressed += comp_size;
                 total_uncompressed += uncomp_size;
                 file_count++;
@@ -106,16 +108,15 @@ private:
         }
 
         fmt::print("{}\n", std::string(70, '-'));
-        
+
         int overall_ratio = 0;
         if (total_uncompressed > 0)
         {
             overall_ratio = 100 - (int)((total_compressed * 100) / total_uncompressed);
         }
-        
-        fmt::print("{:>10}  {:>10}  {:>4}%  {}\n",
-                   formatSize(total_compressed), formatSize(total_uncompressed),
-                   overall_ratio, "TOTAL");
+
+        fmt::print("{:>10}  {:>10}  {:>4}%  {}\n", formatSize(total_compressed),
+                   formatSize(total_uncompressed), overall_ratio, "TOTAL");
 
         fmt::print("\n");
         fmt::print("{} file(s)", file_count);
@@ -151,4 +152,3 @@ private:
 };
 
 } // namespace homeshell
-

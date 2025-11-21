@@ -2,6 +2,7 @@
 
 #include <homeshell/Command.hpp>
 #include <homeshell/Config.hpp>
+#include <homeshell/OutputRedirection.hpp>
 #include <homeshell/PromptFormatter.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/TerminalInfo.hpp>
@@ -371,8 +372,14 @@ private:
 
     Status executeCommand(const std::string& line)
     {
+        // Parse for output redirection
+        RedirectInfo redirect_info = OutputRedirection::parse(line);
+
+        // Use the command part (without redirection) for execution
+        std::string command_line = redirect_info.command;
+
         // Parse command line
-        std::vector<std::string> tokens = tokenize(line);
+        std::vector<std::string> tokens = tokenize(command_line);
         if (tokens.empty())
         {
             return Status::ok();
@@ -390,19 +397,29 @@ private:
             return Status::error("Unknown command: " + cmd_name);
         }
 
+        // Setup output redirection if needed
+        OutputRedirection redirector;
+        if (redirect_info.type != RedirectType::None)
+        {
+            if (!redirector.redirect(redirect_info))
+            {
+                return Status::error("Failed to setup output redirection");
+            }
+        }
+
         // Execute command
         CommandContext context;
         context.args = args;
         context.verbose = false; // Could be set from config or flag
+        // Disable colors when output is redirected to a file
+        context.use_colors = (redirect_info.type == RedirectType::None);
 
-        if (command->getType() == CommandType::Asynchronous)
-        {
-            return executeAsync(command, context);
-        }
-        else
-        {
-            return command->execute(context);
-        }
+        Status result = (command->getType() == CommandType::Asynchronous)
+                            ? executeAsync(command, context)
+                            : command->execute(context);
+
+        // Redirection is automatically restored by OutputRedirection destructor
+        return result;
     }
 
     Status executeAsync(std::shared_ptr<ICommand> command, const CommandContext& context)

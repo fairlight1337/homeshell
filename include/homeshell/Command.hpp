@@ -21,6 +21,7 @@ struct CommandContext
 {
     std::vector<std::string> args;
     bool verbose = false;
+    bool use_colors = true; // Whether to use color in output
 };
 
 class ICommand

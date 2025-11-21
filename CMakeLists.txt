@@ -71,6 +71,7 @@ add_library(homeshell
     src/Homeshell.cpp
     src/EncryptedMount.cpp
     src/VirtualFilesystem.cpp
+    src/OutputRedirection.cpp
 )
 
 target_include_directories(homeshell
@@ -93,6 +94,9 @@ target_link_libraries(homeshell
         sqlcipher
 )
 
+# Find ncurses for the editor
+find_package(Curses REQUIRED)
+
 target_link_libraries(homeshell-linux
     PRIVATE
         homeshell
@@ -101,6 +105,12 @@ target_link_libraries(homeshell-linux
         fmt::fmt
         replxx
         miniz
+        ${CURSES_LIBRARIES}
+)
+
+target_include_directories(homeshell-linux
+    PRIVATE
+        ${CURSES_INCLUDE_DIRS}
 )
 
 # Find clang-format

@@ -39,6 +39,17 @@ A modern, interactive C++20 shell with advanced features including line editing,
 - **Auto-mounting** - Configure mounts to load automatically on startup
 - **Full File Operations** - All filesystem commands work transparently with encrypted mounts
 
+### 🖥️ System Information
+- **Hardware Detection** - USB, PCI, and block device enumeration
+- **Comprehensive Reports** - CPU, memory, GPU, disk, and network information
+- **Real-time Monitoring** - Process listing with CPU and memory usage
+- **Color-coded Output** - Visual indicators for system health and resource usage
+
+### 📝 Output Redirection
+- **Bash-compatible** - Support for `>`, `>>`, `2>`, `2>>`, `&>`, `&>>`
+- **Flexible Routing** - Redirect stdout, stderr, or both
+- **Virtual Filesystem** - Works with encrypted mounts and regular files
+
 ## Quick Start
 
 ### Clone & Build
@@ -200,6 +211,7 @@ Tab completion works for:
 | `rm` | Remove files or directories | Sync |
 | `file` | Determine file type (magic detection) | Sync |
 | `tree` | Display directory tree structure | Sync |
+| `edit` | Edit a file (nano-style editor) | Sync |
 | `zip` | Create zip archives | Sync |
 | `unzip` | Extract zip archives | Sync |
 | `zipinfo` | List zip archive contents | Sync |
@@ -208,6 +220,10 @@ Tab completion works for:
 | `vfs` | Show virtual filesystem info | Sync |
 | `top` | Display running processes | Sync |
 | `kill` | Send signal to a process | Sync |
+| `lsusb` | List USB devices and controllers | Sync |
+| `lspci` | List PCI devices | Sync |
+| `lsblk` | List block devices and partitions | Sync |
+| `sysinfo` | Show comprehensive system information | Sync |
 | `datetime` | Show current date/time in ISO format | Sync |
 | `ping` | Ping a host | Async |
 | `sleep` | Sleep for N seconds (async demo) | Async |
@@ -266,6 +282,27 @@ Tab completion works for:
 - Displays summary with total directory and file count
 - Example: `tree` or `tree /secure`
 
+**`edit <filename>`**
+- Interactive text editor with nano-style interface
+- Features:
+  - **Full-screen editing** using ncurses
+  - **Arrow key navigation** with Page Up/Down support
+  - **Insert/delete** characters and lines
+  - **Save/exit** with confirmation for unsaved changes
+  - **Status bar** showing filename and modification status
+  - **Keyboard shortcuts:**
+    - `Ctrl-X` - Exit (prompts to save if modified)
+    - `Ctrl-O` - Save file
+    - `Ctrl-K` - Cut current line
+    - `Ctrl-U` - Paste cut line
+    - `Ctrl-W` - Search
+    - Arrow keys - Navigate
+    - Home/End - Jump to start/end of line
+    - Backspace/Delete - Remove characters
+- Works with both regular and virtual filesystem paths
+- Creates new files if they don't exist
+- Example: `edit /secure/notes.txt`, `edit config.json`
+
 #### Archive Commands
 
 **`zip <archive.zip> <file1> [file2 ...]`**
@@ -312,6 +349,39 @@ Tab completion works for:
 - Default signal: SIGTERM (graceful termination)
 - Example: `kill 1234`, `kill -9 1234`, `kill -s KILL 1234 5678`
 
+**`lsusb`**
+- List all USB devices and controllers (Linux only)
+- Shows Bus, Device, Vendor ID, Product ID, and device names
+- Color-coded output with speed information
+- Example: `lsusb`
+
+**`lspci`**
+- List all PCI devices (Linux only)
+- Shows slot, device class, vendor, and device info
+- Color-coded device classes (Display, Network, Storage, etc.)
+- Example: `lspci`
+
+**`lsblk`**
+- List block devices and partitions (Linux only)
+- Shows device name, size, type, read-only status, removable status, filesystem type, and mount point
+- Tree view showing partition hierarchy
+- Color-coded by device type and usage percentage
+- Example: `lsblk`
+
+**`sysinfo`**
+- Show comprehensive system information (Linux only)
+- Displays:
+  - **Operating System**: Name, hostname, kernel, architecture, distribution, uptime
+  - **CPU**: Model, processor count, cores, current speed
+  - **Memory**: Total/used/free RAM, swap usage with percentage
+  - **System Load**: 1, 5, and 15-minute load averages
+  - **Graphics**: GPU information, NVIDIA driver version
+  - **Disks**: All mounted filesystems with usage and capacity
+  - **Network**: All network interfaces with status and MAC addresses
+  - **Display**: X11 or Wayland display server detection
+- Color-coded status indicators (green/yellow/red based on usage)
+- Example: `sysinfo`
+
 **`datetime`**
 - Show current date and time in ISO 8601 format
 - Format: `YYYY-MM-DDTHH:MM:SS.mmm`
@@ -325,6 +395,44 @@ Tab completion works for:
 - **Supports cancellation** with CTRL-C
 - **Note**: Requires root privileges or `CAP_NET_RAW` capability on Linux
   - Run with `sudo` or set capability: `sudo setcap cap_net_raw+ep ./homeshell-linux`
+
+### Output Redirection
+
+Homeshell supports redirecting command output to files, similar to bash:
+
+**Operators:**
+- `>` - Redirect stdout to file (truncate)
+- `>>` - Redirect stdout to file (append)
+- `2>` - Redirect stderr to file (truncate)
+- `2>>` - Redirect stderr to file (append)
+- `&>` - Redirect both stdout and stderr to file (truncate)
+- `&>>` - Redirect both stdout and stderr to file (append)
+
+**Examples:**
+```bash
+# Redirect stdout to file (overwrite)
+ls -l > files.txt
+
+# Append stdout to file
+echo "New line" >> log.txt
+
+# Redirect stderr to file
+command 2> errors.txt
+
+# Redirect both stdout and stderr
+sysinfo &> system_report.txt
+
+# Append both stdout and stderr
+command &>> full_log.txt
+```
+
+**Notes:**
+- Output redirection works with all commands
+- Files are created automatically if they don't exist
+- Redirection is applied before command execution
+- Works with both regular and virtual filesystem paths
+- **ANSI color codes are automatically stripped when redirecting to files**
+- Color output is preserved when displaying to terminal
 
 ## Configuration
 

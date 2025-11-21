@@ -3,11 +3,13 @@
 #include <homeshell/Command.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/VirtualFilesystem.hpp>
+
 #include <fmt/color.h>
 #include <miniz.h>
-#include <vector>
-#include <string>
+
 #include <filesystem>
+#include <string>
+#include <vector>
 
 namespace homeshell
 {
@@ -63,16 +65,18 @@ public:
     }
 
 private:
-    Status extractZipArchive(const std::string& archive_name, const std::string& dest_dir, bool junk_paths)
+    Status extractZipArchive(const std::string& archive_name, const std::string& dest_dir,
+                             bool junk_paths)
     {
         auto& vfs = VirtualFilesystem::getInstance();
-        
+
         // Ensure destination directory exists
         if (!vfs.exists(dest_dir))
         {
             if (!vfs.createDirectory(dest_dir))
             {
-                fmt::print(fg(fmt::color::red), "Error: Failed to create destination directory '{}'\n", dest_dir);
+                fmt::print(fg(fmt::color::red),
+                           "Error: Failed to create destination directory '{}'\n", dest_dir);
                 return Status::error("Failed to create destination");
             }
         }
@@ -101,7 +105,7 @@ private:
             }
 
             std::string filename = file_stat.m_filename;
-            
+
             // Skip if it's a directory entry
             if (filename.back() == '/')
             {
@@ -114,8 +118,8 @@ private:
             {
                 // Extract just the filename
                 size_t last_slash = filename.find_last_of('/');
-                std::string basename = (last_slash != std::string::npos) ? 
-                                      filename.substr(last_slash + 1) : filename;
+                std::string basename =
+                    (last_slash != std::string::npos) ? filename.substr(last_slash + 1) : filename;
                 output_path = dest_dir + "/" + basename;
             }
             else
@@ -127,7 +131,7 @@ private:
             // Extract file
             size_t uncomp_size = file_stat.m_uncomp_size;
             void* p = mz_zip_reader_extract_to_heap(&zip, i, &uncomp_size, 0);
-            
+
             if (!p)
             {
                 fmt::print(fg(fmt::color::red), "Error: Failed to extract '{}'\n", filename);
@@ -164,12 +168,10 @@ private:
 
         mz_zip_reader_end(&zip);
 
-        fmt::print("\n{} Extracted {} file(s)\n",
-                   all_success ? "✓" : "⚠", extracted_count);
+        fmt::print("\n{} Extracted {} file(s)\n", all_success ? "✓" : "⚠", extracted_count);
 
         return all_success ? Status::ok() : Status::error("Some files failed");
     }
 };
 
 } // namespace homeshell
-

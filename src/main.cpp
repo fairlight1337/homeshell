@@ -9,17 +9,22 @@
 #include <homeshell/commands/CdCommand.hpp>
 #include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
+#include <homeshell/commands/EditCommand.hpp>
 #include <homeshell/commands/ExitCommand.hpp>
 #include <homeshell/commands/FileCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
 #include <homeshell/commands/KillCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
+#include <homeshell/commands/LsblkCommand.hpp>
+#include <homeshell/commands/LspciCommand.hpp>
+#include <homeshell/commands/LsusbCommand.hpp>
 #include <homeshell/commands/MkdirCommand.hpp>
 #include <homeshell/commands/MountCommand.hpp>
 #include <homeshell/commands/PingCommand.hpp>
 #include <homeshell/commands/PwdCommand.hpp>
 #include <homeshell/commands/RmCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
+#include <homeshell/commands/SysinfoCommand.hpp>
 #include <homeshell/commands/TopCommand.hpp>
 #include <homeshell/commands/TouchCommand.hpp>
 #include <homeshell/commands/TreeCommand.hpp>
@@ -206,6 +211,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<RmCommand>());
     registry.registerCommand(std::make_shared<FileCommand>());
     registry.registerCommand(std::make_shared<TreeCommand>());
+    registry.registerCommand(std::make_shared<EditCommand>());
 
     // Archive commands
     registry.registerCommand(std::make_shared<ZipCommand>());
@@ -223,6 +229,10 @@ int main(int argc, char** argv)
     // System commands
     registry.registerCommand(std::make_shared<TopCommand>());
     registry.registerCommand(std::make_shared<KillCommand>());
+    registry.registerCommand(std::make_shared<LsusbCommand>());
+    registry.registerCommand(std::make_shared<LspciCommand>());
+    registry.registerCommand(std::make_shared<LsblkCommand>());
+    registry.registerCommand(std::make_shared<SysinfoCommand>());
 
     // Create the shell
     Shell shell(config, terminal_info);
