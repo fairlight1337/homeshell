@@ -732,8 +732,10 @@ All dependencies are managed as git submodules:
 - **[fmt](https://github.com/fmtlib/fmt)** - Modern formatting with colors
 - **[Replxx](https://github.com/AmokHuginnsson/replxx)** - Interactive line editing
 - **[SQLCipher](https://github.com/sqlcipher/sqlcipher)** - Encrypted database storage
-- **[miniz](https://github.com/richgel999/miniz)** - ZIP archive compression/decompression
+- **[miniz](https://github.com/richgel999/miniz)** - ZIP archive compression/decompression (built directly from source)
 - **[Google Test](https://github.com/google/googletest)** - Unit testing framework
+
+**Note on miniz**: The miniz library is built directly from its source files without modifying the submodule. A compatibility header (`include/miniz_compat/miniz_export.h`) is provided to satisfy miniz's build requirements while keeping the submodule clean and reproducible.
 
 ## Development
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 # Project configuration
-project(homeshell VERSION 1.0.0 LANGUAGES CXX)
+project(homeshell VERSION 1.0.0 LANGUAGES C CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -38,7 +38,25 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/sqlcipher)
 
 # Add miniz for zip/unzip functionality
-add_subdirectory(external/miniz)
+# Build miniz directly without modifying the submodule
+add_library(miniz STATIC
+    external/miniz/miniz.c
+    external/miniz/miniz_tdef.c
+    external/miniz/miniz_tinfl.c
+    external/miniz/miniz_zip.c
+)
+
+target_include_directories(miniz
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/external/miniz
+        # Include compatibility headers for miniz_export.h
+        ${CMAKE_SOURCE_DIR}/include/miniz_compat
+)
+
+# Suppress warnings from miniz (third-party code)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(miniz PRIVATE -w)
+endif()
 
 # Add Google Test for unit testing
 option(BUILD_TESTING "Build tests" ON)
