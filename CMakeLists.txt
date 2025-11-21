@@ -24,6 +24,9 @@ configure_file(
 # Add CLI11 for command-line argument parsing
 add_subdirectory(external/CLI11)
 
+# Add nlohmann/json for JSON parsing
+add_subdirectory(external/json)
+
 # Library target
 add_library(homeshell
     src/Homeshell.cpp
@@ -47,6 +50,7 @@ target_link_libraries(homeshell-linux
     PRIVATE
         homeshell
         CLI11::CLI11
+        nlohmann_json::nlohmann_json
 )
 
 # Find clang-format

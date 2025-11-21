@@ -20,7 +20,11 @@ struct Status
      * @param code The exit code of the operation
      * @param message The message of the operation
      */
-    Status(int32_t code, std::string message) : code(code), message(message) {}
+    Status(int32_t code, std::string message)
+        : code(code)
+        , message(message)
+    {
+    }
 
     /**
      * @brief The exit code of the operation
