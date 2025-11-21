@@ -24,7 +24,7 @@ class EncryptedMount
 public:
     EncryptedMount(const std::string& name, const std::string& db_path,
                    const std::string& mount_point, int64_t max_size_mb);
-    ~EncryptedMount();
+    ~EncryptedMount() noexcept;
 
     // Mount operations
     bool mount(const std::string& password);

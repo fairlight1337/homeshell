@@ -65,6 +65,21 @@ public:
     bool createDirectory(const std::string& path);
     bool remove(const std::string& path);
 
+    ~VirtualFilesystem() noexcept
+    {
+        try
+        {
+            // During program shutdown, we cannot safely call SQLite functions
+            // because SQLCipher's global state may already be destroyed.
+            // Just clear the map and let the OS clean up file handles.
+            mounts_.clear();
+        }
+        catch (...)
+        {
+            // Swallow any exceptions in destructor to prevent terminate()
+        }
+    }
+
 private:
     VirtualFilesystem()
         : current_directory_(FilesystemHelper::getCurrentDirectory().string())

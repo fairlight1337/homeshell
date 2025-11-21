@@ -17,9 +17,14 @@ EncryptedMount::EncryptedMount(const std::string& name, const std::string& db_pa
 {
 }
 
-EncryptedMount::~EncryptedMount()
+EncryptedMount::~EncryptedMount() noexcept
 {
-    unmount();
+    // Note: We don't call unmount() here because during program shutdown,
+    // SQLCipher's global state may already be destroyed, causing a segfault.
+    // Instead, we just set db_ to nullptr and let the OS clean up file handles.
+    // For normal operation (not program shutdown), unmount() should be called
+    // explicitly before the object is destroyed.
+    db_ = nullptr;
 }
 
 bool EncryptedMount::mount(const std::string& password)
@@ -102,9 +107,13 @@ bool EncryptedMount::unmount()
         return true;
     }
 
-    sqlite3_close(db_);
+    // Close database connection
+    // Note: sqlite3_close() might fail if there are unfinalized statements,
+    // but we'll use sqlite3_close_v2() which handles this gracefully
+    int rc = sqlite3_close_v2(db_);
     db_ = nullptr;
-    return true;
+    
+    return (rc == SQLITE_OK);
 }
 
 bool EncryptedMount::initializeSchema()
