@@ -14,6 +14,40 @@
 namespace homeshell
 {
 
+/**
+ * @brief Extract ZIP archives
+ *
+ * Extracts files and directories from ZIP format archives using the miniz library.
+ * Supports extraction to regular filesystem and virtual filesystem.
+ *
+ * @details Features:
+ *          - Extract entire archive or specific files
+ *          - Preserve directory structure
+ *          - Flatten directory structure (-j flag)
+ *          - Custom destination directory (-o flag)
+ *          - Progress reporting
+ *          - Works with virtual filesystem as destination
+ *
+ *          Command syntax:
+ *          @code
+ *          unzip <archive.zip> [-o <destination>] [-j]
+ *          @endcode
+ *
+ *          Options:
+ *          - `-o <destination>`: Extract to specific directory (default: current directory)
+ *          - `-j`: Junk paths (flatten directory structure, extract all to one directory)
+ *
+ * Example usage:
+ * @code
+ * unzip backup.zip                         // Extract to current directory
+ * unzip backup.zip -o /tmp/extracted       // Extract to specific location
+ * unzip backup.zip -j                      // Extract all files to current dir (flatten)
+ * unzip backup.zip -o /secure -j           // Extract to virtual filesystem, flattened
+ * @endcode
+ *
+ * @note Uses miniz library for ZIP operations.
+ *       Creates destination directories automatically if needed.
+ */
 class UnzipCommand : public ICommand
 {
 public:
@@ -32,6 +66,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the unzip command
+     * @param context Command context with archive name and optional flags
+     * @return Status::ok() on success, Status::error() on failure
+     */
     Status execute(const CommandContext& context) override
     {
         if (context.args.empty())

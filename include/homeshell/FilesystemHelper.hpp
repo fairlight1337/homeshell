@@ -11,16 +11,55 @@ namespace homeshell
 
 namespace fs = std::filesystem;
 
+/**
+ * @brief File metadata information
+ *
+ * Contains detailed information about a filesystem entry (file, directory, symlink).
+ */
 struct FileInfo
 {
-    std::string name;
-    bool is_directory;
-    bool is_regular_file;
-    bool is_symlink;
-    uintmax_t size;
-    std::string permissions;
+    std::string name;        ///< Entry name (without path)
+    bool is_directory;       ///< true if this is a directory
+    bool is_regular_file;    ///< true if this is a regular file
+    bool is_symlink;         ///< true if this is a symbolic link
+    uintmax_t size;          ///< File size in bytes (0 for directories)
+    std::string permissions; ///< Unix-style permission string (e.g., "rwxr-xr-x")
 };
 
+/**
+ * @brief Filesystem utility functions
+ *
+ * Provides cross-platform filesystem operations using std::filesystem,
+ * with additional utility functions for common tasks.
+ *
+ * @details Features:
+ *          - Directory navigation (get/change current directory)
+ *          - Directory listing with detailed file information
+ *          - File type detection (regular, directory, symlink)
+ *          - Path manipulation (absolute paths, resolution)
+ *          - Permission string formatting
+ *          - Human-readable size formatting
+ *          - Error handling via std::error_code
+ *
+ *          All methods are static; no instance needed.
+ *
+ * Example usage:
+ * @code
+ * // List directory
+ * auto files = FilesystemHelper::listDirectory("/home/user");
+ * for (const auto& file : files) {
+ *     fmt::print("{} ({})\n", file.name,
+ *                FilesystemHelper::formatSize(file.size));
+ * }
+ *
+ * // Change directory
+ * if (FilesystemHelper::changeDirectory("/tmp")) {
+ *     auto cwd = FilesystemHelper::getCurrentDirectory();
+ * }
+ * @endcode
+ *
+ * @note Uses std::filesystem (C++17) for cross-platform compatibility.
+ */
 class FilesystemHelper
 {
 public:

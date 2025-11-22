@@ -14,6 +14,45 @@
 namespace homeshell
 {
 
+/**
+ * @brief Display ZIP archive contents
+ *
+ * Lists files and directories contained in ZIP archives with detailed information
+ * including sizes, compression ratios, and timestamps.
+ *
+ * @details Features:
+ *          - List all files in archive
+ *          - Show uncompressed and compressed sizes
+ *          - Display compression ratios
+ *          - Show modification timestamps
+ *          - Total archive statistics
+ *          - Color-coded output
+ *
+ *          Command syntax:
+ *          @code
+ *          zipinfo <archive.zip>
+ *          @endcode
+ *
+ *          Output format:
+ *          @code
+ *          Archive: backup.zip
+ *          Length     Compressed  Ratio   Date/Time             Name
+ *          -------    ----------  -----   ---------             ----
+ *          1024       512         50.0%   2024-01-15 10:30:45   file1.txt
+ *          2048       1024        50.0%   2024-01-15 10:31:20   dir/file2.txt
+ *          -------    ----------  -----
+ *          3072       1536        50.0%   2 files
+ *          @endcode
+ *
+ * Example usage:
+ * @code
+ * zipinfo backup.zip           // Show contents of archive
+ * zipinfo project.zip          // List all files with details
+ * @endcode
+ *
+ * @note Uses miniz library for ZIP operations.
+ *       Does not extract files, only displays information.
+ */
 class ZipInfoCommand : public ICommand
 {
 public:
@@ -32,6 +71,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the zipinfo command
+     * @param context Command context with archive name
+     * @return Status::ok() on success, Status::error() on failure
+     */
     Status execute(const CommandContext& context) override
     {
         if (context.args.empty())

@@ -13,9 +13,45 @@
 namespace homeshell
 {
 
+/**
+ * @brief Shell prompt formatter with token replacement
+ *
+ * Formats shell prompts by replacing tokens with dynamic values like current path,
+ * user, time, and date.
+ *
+ * @details Supported tokens:
+ *          - `%path%` - Full current working directory path
+ *          - `%folder%` - Current directory name only
+ *          - `%user%` - Current username
+ *          - `%time%` - Current time (HH:MM:SS)
+ *          - `%date%` - Current date (YYYY-MM-DD)
+ *
+ *          All methods are static; no instance needed.
+ *          Tokens are case-sensitive and replaced at runtime.
+ *
+ * Example usage:
+ * @code
+ * // In config file:
+ * "prompt_format": "%user%@%folder% $ "
+ *
+ * // At runtime produces:
+ * "john@homeshell $ "
+ *
+ * // With time/date:
+ * "prompt_format": "[%time%] %path% > "
+ * // Produces: "[14:30:45] /home/user/project > "
+ * @endcode
+ *
+ * @note Cross-platform: Uses $USER on Unix, %USERNAME% on Windows.
+ */
 class PromptFormatter
 {
 public:
+    /**
+     * @brief Format prompt string by replacing tokens
+     * @param format_string Prompt format with tokens (e.g., "%user%@%folder% $ ")
+     * @return Formatted prompt with tokens replaced by actual values
+     */
     static std::string format(const std::string& format_string)
     {
         std::string result = format_string;

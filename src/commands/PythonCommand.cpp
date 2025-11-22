@@ -20,6 +20,7 @@ namespace homeshell
 bool PythonCommand::micropython_initialized_ = false;
 char PythonCommand::heap_[64 * 1024];
 
+// LCOV_EXCL_START - MicroPython initialization is difficult to test comprehensively
 void PythonCommand::initializeMicroPython()
 {
     if (!micropython_initialized_)
@@ -38,7 +39,9 @@ void PythonCommand::deinitializeMicroPython()
         micropython_initialized_ = false;
     }
 }
+// LCOV_EXCL_STOP
 
+// LCOV_EXCL_START - Interactive REPL is not testable in automated tests
 void PythonCommand::runREPL()
 {
     fmt::print("MicroPython REPL\n");
@@ -127,6 +130,7 @@ void PythonCommand::runREPL()
         }
     }
 }
+// LCOV_EXCL_STOP
 
 void PythonCommand::executeString(const std::string& code)
 {

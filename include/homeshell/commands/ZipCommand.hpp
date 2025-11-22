@@ -15,6 +15,41 @@
 namespace homeshell
 {
 
+/**
+ * @brief Create ZIP archives
+ *
+ * Compresses files and directories into ZIP format archives using the miniz library.
+ * Supports both regular filesystem and virtual filesystem files.
+ *
+ * @details Features:
+ *          - Create new ZIP archives
+ *          - Add multiple files and directories
+ *          - Recursive directory compression
+ *          - Works with virtual filesystem files
+ *          - Preserves directory structure
+ *          - Compression using DEFLATE algorithm
+ *
+ *          Command syntax:
+ *          @code
+ *          zip <archive.zip> <file1> [file2 ...]
+ *          @endcode
+ *
+ *          The command will:
+ *          1. Create a new ZIP archive
+ *          2. Add all specified files/directories
+ *          3. Recursively process directories
+ *          4. Report progress and final count
+ *
+ * Example usage:
+ * @code
+ * zip backup.zip file1.txt file2.txt       // Archive multiple files
+ * zip project.zip /path/to/directory       // Archive entire directory
+ * zip secure.zip /secure/file.txt          // Archive from virtual filesystem
+ * @endcode
+ *
+ * @note Requires at least 2 arguments (archive name + at least one file).
+ *       Uses miniz library for ZIP operations.
+ */
 class ZipCommand : public ICommand
 {
 public:
@@ -33,6 +68,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the zip command
+     * @param context Command context with archive name and files to compress
+     * @return Status::ok() on success, Status::error() on failure
+     */
     Status execute(const CommandContext& context) override
     {
         if (context.args.size() < 2)
