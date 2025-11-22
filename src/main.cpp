@@ -16,6 +16,7 @@
 #include <homeshell/commands/FindCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
 #include <homeshell/commands/KillCommand.hpp>
+#include <homeshell/commands/LocateCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
 #include <homeshell/commands/LsblkCommand.hpp>
 #include <homeshell/commands/LspciCommand.hpp>
@@ -33,6 +34,7 @@
 #include <homeshell/commands/TreeCommand.hpp>
 #include <homeshell/commands/UnmountCommand.hpp>
 #include <homeshell/commands/UnzipCommand.hpp>
+#include <homeshell/commands/UpdatedbCommand.hpp>
 #include <homeshell/commands/VersionCommand.hpp>
 #include <homeshell/commands/VfsCommand.hpp>
 #include <homeshell/commands/ZipCommand.hpp>
@@ -218,6 +220,10 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<FindCommand>());
     registry.registerCommand(std::make_shared<TreeCommand>());
     registry.registerCommand(std::make_shared<EditCommand>());
+
+    // File database commands
+    registry.registerCommand(std::make_shared<UpdatedbCommand>());
+    registry.registerCommand(std::make_shared<LocateCommand>());
 
     // Archive commands
     registry.registerCommand(std::make_shared<ZipCommand>());

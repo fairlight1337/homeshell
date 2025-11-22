@@ -276,6 +276,8 @@ Tab completion works for:
 | `tree` | Display directory tree structure | Sync |
 | `find` | Search for files and directories | Sync |
 | `edit` | Edit a file (nano-style editor) | Sync |
+| `updatedb` | Build file database for fast searching | Sync |
+| `locate` | Find files using database (fast) | Sync |
 | `zip` | Create zip archives | Sync |
 | `unzip` | Extract zip archives | Sync |
 | `zipinfo` | List zip archive contents | Sync |
@@ -394,6 +396,44 @@ Tab completion works for:
 - Works with both regular and virtual filesystem paths
 - Creates new files if they don't exist
 - Example: `edit /secure/notes.txt`, `edit config.json`
+
+**`updatedb [options]`**
+- Build a database of all files for fast searching with `locate`
+- Options:
+  - `--path <dir>` - Add directory to scan (can use multiple times)
+  - `--exclude <dir>` - Exclude directory from scan (can use multiple times)
+  - `--help` - Show help message
+- Scans filesystem and stores paths in SQLite database (~/.homeshell/locate.db)
+- Shows statistics after completion (files indexed, time taken, total size)
+- Default behavior: scans current directory + all virtual mounts
+- Default excludes: /proc, /sys, /dev, /run, /tmp
+- Examples:
+  - `updatedb` - Scan current directory and virtual mounts
+  - `updatedb --path /home --path /usr` - Scan specific directories
+  - `updatedb --exclude /home/user/large_dir` - Exclude directories
+- **Note**: Run this periodically to keep database up-to-date
+
+**`locate [options] <pattern>`**
+- Find files instantly using the database created by `updatedb`
+- Options:
+  - `-i` - Case-insensitive search (default)
+  - `-c` - Case-sensitive search
+  - `-l <n>` - Limit results to n entries (default: 1000)
+  - `--help` - Show help message
+- Pattern matching:
+  - `*` - Matches any characters
+  - `?` - Matches single character
+  - Substring - Matches anywhere in path
+- Examples:
+  - `locate *.cpp` - Find all C++ source files
+  - `locate config` - Find files with "config" in name
+  - `locate /usr/bin/*` - Find all files in /usr/bin
+  - `locate -c README.md` - Case-sensitive search
+  - `locate -l 50 test` - Limit to 50 results
+- **Very fast** - searches database, not filesystem
+- Works with both regular and virtual filesystem paths
+- Directories shown in blue, files in default color
+- **Note**: Database must exist (run `updatedb` first)
 
 #### Archive Commands
 

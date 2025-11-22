@@ -136,6 +136,7 @@ add_library(homeshell
     src/EncryptedMount.cpp
     src/VirtualFilesystem.cpp
     src/OutputRedirection.cpp
+    src/FileDatabase.cpp
     src/commands/PythonCommand.cpp
     src/commands/ChmodCommand.cpp
     src/commands/VersionCommand.cpp
