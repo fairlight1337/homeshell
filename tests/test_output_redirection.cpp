@@ -216,3 +216,4 @@ TEST_F(OutputRedirectionTest, InvalidFilePath)
     EXPECT_FALSE(redirector.redirect(info));
 }
 
+

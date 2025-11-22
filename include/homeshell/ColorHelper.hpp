@@ -36,3 +36,4 @@ void print_color(bool use_colors, fmt::text_style style, const std::string& form
 
 } // namespace homeshell
 
+

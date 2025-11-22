@@ -293,12 +293,12 @@ Tab completion works for:
   - **Keyboard shortcuts:**
     - `Ctrl-X` - Exit (prompts to save if modified)
     - `Ctrl-O` - Save file
-    - `Ctrl-K` - Cut current line
-    - `Ctrl-U` - Paste cut line
-    - `Ctrl-W` - Search
-    - Arrow keys - Navigate
+    - `Ctrl-K` - Cut current line to clipboard
+    - `Ctrl-U` - Paste line from clipboard
+    - Arrow keys - Navigate (with auto-scrolling)
     - Home/End - Jump to start/end of line
     - Backspace/Delete - Remove characters
+    - Enter - Insert new line
 - Works with both regular and virtual filesystem paths
 - Creates new files if they don't exist
 - Example: `edit /secure/notes.txt`, `edit config.json`
