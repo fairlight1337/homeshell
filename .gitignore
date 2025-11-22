@@ -1,1 +1,60 @@
-build
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# Compiled Object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+homeshell-linux
+homeshell_tests
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+compile_commands.json
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# History and config files (user-specific)
+.homeshell_history
+
+# Temporary files
+*.log
+*.tmp
+
+# External build artifacts
+external/micropython_embed/
+external/sqlcipher/sqlite3.c
+external/sqlcipher/sqlite3.h
+external/sqlcipher/*.o
