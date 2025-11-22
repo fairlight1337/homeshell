@@ -14,6 +14,7 @@ add_executable(homeshell_tests
     test_system_commands.cpp
     test_sysinfo_commands.cpp
     test_output_redirection.cpp
+    test_new_commands.cpp
 )
 
 # Disable clang-tidy for tests

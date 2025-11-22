@@ -18,6 +18,10 @@
 #define MICROPY_PY_IO                           (0)  // Disabled - no file I/O support
 #define MICROPY_PY_BUILTINS_STR_UNICODE         (1)
 
+// Enable floating point support (required for division and math operations)
+#define MICROPY_FLOAT_IMPL                      (MICROPY_FLOAT_IMPL_DOUBLE)
+#define MICROPY_PY_BUILTINS_FLOAT               (1)
+
 // Enable useful standard library modules
 #define MICROPY_PY_ARRAY                        (1)
 #define MICROPY_PY_COLLECTIONS                  (1)
