@@ -26,6 +26,39 @@
 namespace homeshell
 {
 
+/**
+ * @brief Display comprehensive system information
+ *
+ * Shows detailed information about the system including CPU, memory, disks,
+ * GPU, network interfaces, OS details, and system load.
+ *
+ * @details The sysinfo command provides:
+ *          - System uptime and load averages
+ *          - CPU information (model, cores, frequency)
+ *          - GPU information (if available)
+ *          - Memory usage (total, used, free, buffers, cache)
+ *          - Disk information (all mounted filesystems with usage)
+ *          - Network interfaces (with IP addresses and subnets)
+ *          - OS information (kernel, distribution, hostname)
+ *          - Color-coded output for better readability
+ *
+ *          Information sources:
+ *          - /proc/cpuinfo (CPU details)
+ *          - /proc/meminfo (memory statistics)
+ *          - /sys/class/drm (GPU information)
+ *          - statvfs() (filesystem statistics)
+ *          - getifaddrs() (network interfaces)
+ *          - uname() (OS/kernel information)
+ *          - /proc/uptime, /proc/loadavg (system metrics)
+ *
+ * Example usage:
+ * @code
+ * sysinfo                     // Show all system information
+ * @endcode
+ *
+ * @note Linux only. On other platforms, reports "not supported".
+ *       Requires appropriate permissions to read system files.
+ */
 class SysinfoCommand : public ICommand
 {
 public:

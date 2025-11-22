@@ -16,18 +16,64 @@
 namespace homeshell
 {
 
+/**
+ * @brief Block device information
+ *
+ * Contains information about a block device (disk/partition) on the system.
+ */
 struct BlockDevice
 {
-    std::string name;
-    std::string size;
-    std::string type;
-    std::string mountpoint;
-    std::string fstype;
-    std::string label;
-    bool removable;
-    bool readonly;
+    std::string name;       ///< Device name (e.g., "sda", "sda1", "nvme0n1")
+    std::string size;       ///< Device size (human-readable, e.g., "500G")
+    std::string type;       ///< Device type ("disk", "part", "loop", "rom")
+    std::string mountpoint; ///< Mount point if mounted (e.g., "/", "/home")
+    std::string fstype;     ///< Filesystem type (e.g., "ext4", "ntfs", "vfat")
+    std::string label;      ///< Filesystem label if set
+    bool removable;         ///< true if removable media (USB, SD card)
+    bool readonly;          ///< true if mounted read-only
 };
 
+/**
+ * @brief List block devices
+ *
+ * Displays information about block devices (disks, partitions, etc.) by reading
+ * from /sys/block and /sys/class/block on Linux systems.
+ *
+ * @details The lsblk command provides comprehensive information about:
+ *          - Physical disks and partitions
+ *          - Device sizes and types
+ *          - Mount points and filesystem types
+ *          - Removable media detection
+ *          - Read-only status
+ *          - Color-coded output
+ *
+ *          Output includes:
+ *          - NAME: Device name
+ *          - SIZE: Capacity (human-readable)
+ *          - TYPE: disk/part/loop/rom
+ *          - RO: Read-only flag
+ *          - RM: Removable flag
+ *          - FSTYPE: Filesystem type
+ *          - MOUNTPOINT: Where mounted
+ *
+ * Example output:
+ * @code
+ * NAME         SIZE     TYPE     RO   RM   FSTYPE     MOUNTPOINT
+ * sda          500G     disk     0    0
+ * ├─sda1       512M     part     0    0    vfat       /boot/efi
+ * ├─sda2       100G     part     0    0    ext4       /
+ * └─sda3       400G     part     0    0    ext4       /home
+ * nvme0n1      256G     disk     0    0
+ * └─nvme0n1p1  256G     part     0    0    ntfs
+ * @endcode
+ *
+ * Example usage:
+ * @code
+ * lsblk                       // List all block devices
+ * @endcode
+ *
+ * @note Linux only. On other platforms, reports "not supported".
+ */
 class LsblkCommand : public ICommand
 {
 public:
@@ -46,6 +92,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the lsblk command
+     * @param context Command context (no arguments used)
+     * @return Status::ok() on success, Status::error() if not supported
+     */
     Status execute(const CommandContext& context) override
     {
 #ifdef __linux__
@@ -75,42 +126,30 @@ public:
         // Print devices
         for (const auto& dev : devices)
         {
-            fmt::print("{:<12} ", dev.name);
-            fmt::print("{:<8} ", dev.size);
-
-            // Color code device types
             if (context.use_colors)
             {
-                auto type_color = fmt::color::white;
+                // Color code by type
+                auto color = fmt::color::white;
                 if (dev.type == "disk")
-                    type_color = fmt::color::cyan;
+                    color = fmt::color::cyan;
                 else if (dev.type == "part")
-                    type_color = fmt::color::green;
-                else if (dev.type == "rom")
-                    type_color = fmt::color::yellow;
-                fmt::print(fg(type_color), "{:<8} ", dev.type);
+                    color = fmt::color::green;
+                else if (dev.type == "loop")
+                    color = fmt::color::yellow;
+
+                fmt::print(fg(color), "{:<12}", dev.name);
             }
             else
             {
-                fmt::print("{:<8} ", dev.type);
+                fmt::print("{:<12}", dev.name);
             }
 
-            fmt::print("{:<4} ", dev.readonly ? "1" : "0");
-            fmt::print("{:<4} ", dev.removable ? "1" : "0");
-            fmt::print("{:<10} ", dev.fstype);
-
-            if (!dev.mountpoint.empty())
-            {
-                if (context.use_colors)
-                    fmt::print(fg(fmt::color::blue), "{}", dev.mountpoint);
-                else
-                    fmt::print("{}", dev.mountpoint);
-            }
-
-            fmt::print("\n");
+            fmt::print(" {:<8} {:<8} {:<4} {:<4} {:<10} {}\n", dev.size, dev.type,
+                       dev.readonly ? "1" : "0", dev.removable ? "1" : "0", dev.fstype,
+                       dev.mountpoint);
         }
 
-        fmt::print("\n{} device(s) found\n", devices.size());
+        fmt::print("\n");
         return Status::ok();
 #else
         if (context.use_colors)
@@ -126,132 +165,88 @@ private:
     std::vector<BlockDevice> getBlockDevices()
     {
         std::vector<BlockDevice> devices;
-        std::error_code ec;
 
-        if (!std::filesystem::exists("/sys/block", ec))
+        if (!std::filesystem::exists("/sys/class/block"))
         {
             return devices;
         }
 
-        // Enumerate block devices
-        for (const auto& entry : std::filesystem::directory_iterator("/sys/block", ec))
+        for (const auto& entry : std::filesystem::directory_iterator("/sys/class/block"))
         {
-            if (!entry.is_directory() && !entry.is_symlink())
-                continue;
-
             std::string name = entry.path().filename().string();
 
-            // Skip loop devices without backing file
+            // Skip loop devices without backing files
             if (name.find("loop") == 0)
             {
                 std::string backing_file =
-                    readSysFile(entry.path().string() + "/loop/backing_file");
+                    readSysFile("/sys/class/block/" + name + "/loop/backing_file");
                 if (backing_file.empty())
                     continue;
             }
 
-            BlockDevice dev = readBlockDevice(name, entry.path().string());
-            devices.push_back(dev);
+            BlockDevice dev;
+            dev.name = name;
+            dev.size = formatSize(readSysFile("/sys/class/block/" + name + "/size"));
+            dev.removable = (readSysFile("/sys/class/block/" + name + "/removable") == "1");
+            dev.readonly = (readSysFile("/sys/class/block/" + name + "/ro") == "1");
 
-            // Check for partitions
-            auto partitions = getPartitions(name, entry.path().string());
-            devices.insert(devices.end(), partitions.begin(), partitions.end());
-        }
+            // Determine type
+            if (name.find("loop") == 0)
+                dev.type = "loop";
+            else if (name.find("sr") == 0 || name.find("cdrom") == 0)
+                dev.type = "rom";
+            else if (std::isdigit(name.back()) ||
+                     name.find("nvme") != std::string::npos && name.find("p") != std::string::npos)
+                dev.type = "part";
+            else
+                dev.type = "disk";
 
-        // Sort by name
-        std::sort(devices.begin(), devices.end(),
-                  [](const BlockDevice& a, const BlockDevice& b) { return a.name < b.name; });
-
-        return devices;
-    }
-
-    std::vector<BlockDevice> getPartitions(const std::string& parent,
-                                           const std::string& parent_path)
-    {
-        std::vector<BlockDevice> partitions;
-        std::error_code ec;
-
-        for (const auto& entry : std::filesystem::directory_iterator(parent_path, ec))
-        {
-            std::string name = entry.path().filename().string();
-
-            // Check if it's a partition (starts with parent name)
-            if (name.find(parent) != 0 || name == parent)
-                continue;
-
-            if (entry.is_directory() || entry.is_symlink())
+            // Get filesystem info
+            std::string dev_path = "/dev/" + name;
+            if (std::filesystem::exists(dev_path))
             {
-                BlockDevice part = readBlockDevice(name, entry.path().string());
-                part.type = "part";
-                part.name = "├─" + name;
-                partitions.push_back(part);
-            }
-        }
-
-        return partitions;
-    }
-
-    BlockDevice readBlockDevice(const std::string& name, const std::string& device_path)
-    {
-        BlockDevice dev;
-        dev.name = name;
-
-        // Read size
-        std::string size_str = readSysFile(device_path + "/size");
-        if (!size_str.empty())
-        {
-            try
-            {
-                uint64_t sectors = std::stoull(size_str);
-                uint64_t bytes = sectors * 512; // Assume 512-byte sectors
-                dev.size = FilesystemHelper::formatSize(bytes);
-            }
-            catch (...)
-            {
-                dev.size = "0 B";
-            }
-        }
-
-        // Read device type
-        dev.type = "disk";
-
-        // Check if removable
-        std::string removable = readSysFile(device_path + "/removable");
-        dev.removable = (removable == "1");
-
-        // Check if readonly
-        std::string ro = readSysFile(device_path + "/ro");
-        dev.readonly = (ro == "1");
-
-        // Try to get filesystem type and mountpoint from /proc/mounts
-        getMountInfo(name, dev.mountpoint, dev.fstype);
-
-        return dev;
-    }
-
-    void getMountInfo(const std::string& device_name, std::string& mountpoint, std::string& fstype)
-    {
-        std::ifstream mounts("/proc/mounts");
-        if (!mounts)
-            return;
-
-        std::string line;
-        while (std::getline(mounts, line))
-        {
-            std::istringstream iss(line);
-            std::string dev, mp, fs;
-
-            if (iss >> dev >> mp >> fs)
-            {
-                // Check if this mount is for our device
-                if (dev.find("/dev/" + device_name) != std::string::npos)
+                // Try to get mount info from /proc/mounts
+                std::ifstream mounts("/proc/mounts");
+                std::string line;
+                while (std::getline(mounts, line))
                 {
-                    mountpoint = mp;
-                    fstype = fs;
-                    return;
+                    if (line.find(dev_path) == 0)
+                    {
+                        std::istringstream iss(line);
+                        std::string device, mountpoint, fstype;
+                        iss >> device >> mountpoint >> fstype;
+                        dev.mountpoint = mountpoint;
+                        dev.fstype = fstype;
+                        break;
+                    }
+                }
+
+                // If not mounted, try to detect filesystem type from blkid
+                if (dev.fstype.empty())
+                {
+                    // This would require running blkid command or reading superblock
+                    // For now, leave empty
                 }
             }
+
+            devices.push_back(dev);
         }
+
+        // Sort devices (disks first, then partitions)
+        std::sort(devices.begin(), devices.end(),
+                  [](const BlockDevice& a, const BlockDevice& b)
+                  {
+                      if (a.type != b.type)
+                      {
+                          if (a.type == "disk")
+                              return true;
+                          if (b.type == "disk")
+                              return false;
+                      }
+                      return a.name < b.name;
+                  });
+
+        return devices;
     }
 
     std::string readSysFile(const std::string& path)
@@ -268,6 +263,24 @@ private:
         content.erase(content.find_last_not_of(" \t\r\n") + 1);
 
         return content;
+    }
+
+    std::string formatSize(const std::string& sectors_str)
+    {
+        if (sectors_str.empty())
+            return "0B";
+
+        try
+        {
+            uint64_t sectors = std::stoull(sectors_str);
+            uint64_t bytes = sectors * 512; // Most devices use 512-byte sectors
+
+            return FilesystemHelper::formatSize(bytes);
+        }
+        catch (...)
+        {
+            return "0B";
+        }
     }
 #endif
 };

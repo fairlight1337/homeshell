@@ -119,6 +119,114 @@ TEST_F(ChmodCommandTest, ExecuteNonexistentFile)
     EXPECT_FALSE(status.isSuccess());
 }
 
+TEST_F(ChmodCommandTest, ExecuteOctalWithLeadingZero)
+{
+    CommandContext context;
+    context.args = {"0755", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0755);
+}
+
+TEST_F(ChmodCommandTest, ExecuteSymbolicRemoveExecute)
+{
+    chmod(test_file_.c_str(), 0755);
+    
+    CommandContext context;
+    context.args = {"-x", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0644);
+}
+
+TEST_F(ChmodCommandTest, ExecuteSymbolicUserAdd)
+{
+    chmod(test_file_.c_str(), 0644);
+    
+    CommandContext context;
+    context.args = {"u+x", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0744);
+}
+
+TEST_F(ChmodCommandTest, ExecuteSymbolicGroupAdd)
+{
+    chmod(test_file_.c_str(), 0644);
+    
+    CommandContext context;
+    context.args = {"g+x", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0654);
+}
+
+TEST_F(ChmodCommandTest, ExecuteSymbolicOthersRemove)
+{
+    chmod(test_file_.c_str(), 0644);
+    
+    CommandContext context;
+    context.args = {"o-r", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0640);
+}
+
+TEST_F(ChmodCommandTest, ExecuteSymbolicAllAdd)
+{
+    chmod(test_file_.c_str(), 0644);
+    
+    CommandContext context;
+    context.args = {"a+x", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0755);
+}
+
+TEST_F(ChmodCommandTest, ExecuteOctal600)
+{
+    CommandContext context;
+    context.args = {"600", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0600);
+}
+
+TEST_F(ChmodCommandTest, ExecuteOctal444)
+{
+    CommandContext context;
+    context.args = {"444", test_file_};
+    
+    Status status = command_->execute(context);
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_EQ(getFileMode(test_file_), 0444);
+}
+
+TEST_F(ChmodCommandTest, ExecuteInvalidOctalMode)
+{
+    CommandContext context;
+    context.args = {"999", test_file_};  // Invalid octal
+    
+    Status status = command_->execute(context);
+    EXPECT_FALSE(status.isSuccess());
+}
+
+TEST_F(ChmodCommandTest, ExecuteInvalidSymbolicMode)
+{
+    CommandContext context;
+    context.args = {"xyz", test_file_};  // Invalid symbolic mode
+    
+    Status status = command_->execute(context);
+    EXPECT_FALSE(status.isSuccess());
+}
+
 // ============================================================================
 // VersionCommand Tests
 // ============================================================================
@@ -238,6 +346,158 @@ TEST_F(PythonCommandTest, ExecuteNonexistentFile)
     
     // Status is OK but error is printed to stderr
     EXPECT_TRUE(status.isSuccess());
+}
+
+TEST_F(PythonCommandTest, ExecuteArithmetic)
+{
+    CommandContext context;
+    context.args = {"-c", "print(2 + 3)"};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("5"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteFloatingPoint)
+{
+    CommandContext context;
+    context.args = {"-c", "print(10 / 3)"};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("3.33"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteFunction)
+{
+    CommandContext context;
+    context.args = {"-c", "def add(a, b): return a + b\nprint(add(5, 10))"};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("15"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteLoops)
+{
+    CommandContext context;
+    context.args = {"-c", "for i in range(3): print(i)"};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("0"), std::string::npos);
+    EXPECT_NE(output.find("1"), std::string::npos);
+    EXPECT_NE(output.find("2"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteList)
+{
+    CommandContext context;
+    context.args = {"-c", "x = [1, 2, 3]\nprint(len(x))"};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("3"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteDict)
+{
+    CommandContext context;
+    context.args = {"-c", "d = {'key': 'value'}\nprint(d['key'])"};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("value"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteStringOperations)
+{
+    CommandContext context;
+    context.args = {"-c", "s = 'hello'\nprint(s.upper())"};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("HELLO"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteMultipleTimes)
+{
+    // Test init/deinit by running multiple times
+    for (int i = 0; i < 3; ++i)
+    {
+        CommandContext context;
+        context.args = {"-c", "print('iteration')"};
+        
+        testing::internal::CaptureStdout();
+        Status status = command_->execute(context);
+        std::string output = testing::internal::GetCapturedStdout();
+        
+        EXPECT_TRUE(status.isSuccess());
+        EXPECT_NE(output.find("iteration"), std::string::npos);
+    }
+}
+
+TEST_F(PythonCommandTest, ExecuteWithColorsDisabled)
+{
+    CommandContext context;
+    context.args = {"-c", "print('test')"};
+    context.use_colors = false;
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("test"), std::string::npos);
+}
+
+TEST_F(PythonCommandTest, ExecuteComplexScript)
+{
+    // Create more complex test script
+    std::string test_script = "/tmp/test_complex_python.py";
+    std::ofstream file(test_script);
+    file << "# Complex Python script\n";
+    file << "def factorial(n):\n";
+    file << "    if n <= 1:\n";
+    file << "        return 1\n";
+    file << "    return n * factorial(n-1)\n";
+    file << "\n";
+    file << "result = factorial(5)\n";
+    file << "print('Factorial:', result)\n";  // Changed from f-string to regular print
+    file.close();
+    
+    CommandContext context;
+    context.args = {test_script};
+    
+    testing::internal::CaptureStdout();
+    Status status = command_->execute(context);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_NE(output.find("120"), std::string::npos);
+    
+    unlink(test_script.c_str());
 }
 
 // ============================================================================

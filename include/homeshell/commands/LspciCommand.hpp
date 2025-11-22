@@ -15,15 +15,53 @@
 namespace homeshell
 {
 
+/**
+ * @brief PCI device information
+ *
+ * Contains information about a PCI device detected on the system.
+ */
 struct PciDevice
 {
-    std::string slot;
-    std::string class_name;
-    std::string vendor;
-    std::string device;
-    std::string subsystem;
+    std::string slot;       ///< PCI slot address (e.g., "00:1f.2")
+    std::string class_name; ///< Device class (e.g., "SATA controller")
+    std::string vendor;     ///< Vendor name
+    std::string device;     ///< Device name/model
+    std::string subsystem;  ///< Subsystem information
 };
 
+/**
+ * @brief List PCI devices
+ *
+ * Displays information about PCI buses and connected devices by reading
+ * from /sys/bus/pci/devices on Linux systems.
+ *
+ * @details The lspci command provides:
+ *          - PCI slot addresses
+ *          - Device class/type
+ *          - Vendor and device names
+ *          - Subsystem information
+ *          - Color-coded output for better readability
+ *
+ *          Information is gathered from sysfs:
+ *          - class (device class code)
+ *          - vendor (vendor name)
+ *          - device (device name)
+ *          - subsystem_vendor, subsystem_device
+ *
+ * Example output:
+ * @code
+ * 00:00.0 Host bridge: Intel Corporation Device
+ * 00:1f.2 SATA controller: Intel Corporation 8 Series/C220
+ * 02:00.0 Network controller: Intel Corporation Wireless
+ * @endcode
+ *
+ * Example usage:
+ * @code
+ * lspci                       // List all PCI devices
+ * @endcode
+ *
+ * @note Linux only. On other platforms, reports "not supported".
+ */
 class LspciCommand : public ICommand
 {
 public:
@@ -42,6 +80,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the lspci command
+     * @param context Command context (no arguments used)
+     * @return Status::ok() on success, Status::error() if not supported
+     */
     Status execute(const CommandContext& context) override
     {
 #ifdef __linux__
