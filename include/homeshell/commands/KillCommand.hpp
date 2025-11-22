@@ -12,6 +12,55 @@
 namespace homeshell
 {
 
+/**
+ * @brief Send signals to processes
+ *
+ * @details The `kill` command sends signals to one or more processes by PID (Process ID).
+ * Signals can be used to terminate, interrupt, pause, or otherwise control processes.
+ * By default, sends SIGTERM for graceful termination.
+ *
+ * **Usage:**
+ * @code
+ * kill [-s SIGNAL] <pid> [pid2 ...]
+ * kill -SIGNAL <pid> [pid2 ...]
+ * @endcode
+ *
+ * **Supported Signals:**
+ * - `TERM` (15) - Terminate gracefully (default)
+ * - `KILL` (9) - Force kill immediately (cannot be caught)
+ * - `HUP` (1) - Hangup (reload configuration)
+ * - `INT` (2) - Interrupt (like Ctrl+C)
+ * - `QUIT` (3) - Quit with core dump
+ * - `STOP` (19) - Stop/pause process (cannot be caught)
+ * - `CONT` (18) - Continue stopped process
+ *
+ * **Signal Format Options:**
+ * 1. Signal name: `-s TERM`, `-s KILL`
+ * 2. Signal number: `-s 15`, `-s 9`
+ * 3. Short format: `-TERM`, `-9`
+ *
+ * **Examples:**
+ * @code
+ * kill 1234                # Send SIGTERM to PID 1234
+ * kill -9 1234             # Force kill PID 1234
+ * kill -s KILL 1234        # Force kill (alternative syntax)
+ * kill -TERM 1234 5678     # Gracefully terminate multiple processes
+ * kill -s HUP 9999         # Send hangup signal (reload config)
+ * @endcode
+ *
+ * **Return Status:**
+ * - Success: All signals sent successfully
+ * - Error: One or more signals failed to send
+ *
+ * **Error Handling:**
+ * - Invalid PID: Shows error but continues with remaining PIDs
+ * - Permission denied: Process owned by different user
+ * - Process not found: No such process exists
+ *
+ * @note Sending signals to processes owned by other users requires root privileges
+ * @note SIGKILL (9) and SIGSTOP (19) cannot be caught or ignored by processes
+ * @note Use SIGTERM (default) for graceful shutdown before trying SIGKILL
+ */
 class KillCommand : public ICommand
 {
 public:

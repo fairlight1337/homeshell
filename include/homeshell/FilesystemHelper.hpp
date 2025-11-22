@@ -65,6 +65,7 @@ class FilesystemHelper
 public:
     /**
      * @brief Get the current working directory
+     * @return Current working directory path, or "." if error occurs
      */
     static fs::path getCurrentDirectory()
     {
@@ -149,6 +150,8 @@ public:
 
     /**
      * @brief Check if a path exists
+     * @param path Path to check
+     * @return true if path exists, false otherwise
      */
     static bool exists(const std::string& path)
     {
@@ -158,6 +161,8 @@ public:
 
     /**
      * @brief Check if a path is a directory
+     * @param path Path to check
+     * @return true if path is a directory, false otherwise
      */
     static bool isDirectory(const std::string& path)
     {
@@ -167,6 +172,8 @@ public:
 
     /**
      * @brief Check if a path is a regular file
+     * @param path Path to check
+     * @return true if path is a regular file, false otherwise
      */
     static bool isRegularFile(const std::string& path)
     {
@@ -176,6 +183,8 @@ public:
 
     /**
      * @brief Get the absolute path
+     * @param path Relative or absolute path
+     * @return Absolute path, or original path if error occurs
      */
     static fs::path getAbsolutePath(const std::string& path)
     {
@@ -190,6 +199,8 @@ public:
 
     /**
      * @brief Format file size in human-readable format
+     * @param size File size in bytes
+     * @return Formatted string with appropriate unit (B, KB, MB, GB, TB)
      */
     static std::string formatSize(uintmax_t size)
     {

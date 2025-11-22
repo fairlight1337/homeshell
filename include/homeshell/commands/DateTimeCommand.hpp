@@ -12,6 +12,42 @@
 namespace homeshell
 {
 
+/**
+ * @brief Display current date and time in ISO 8601 format
+ *
+ * @details The `datetime` command shows the current system date and time
+ * in ISO 8601 format with millisecond precision. This format is
+ * machine-readable and suitable for timestamps, logging, and data exchange.
+ *
+ * **Usage:**
+ * @code
+ * datetime
+ * @endcode
+ *
+ * **Output Format:**
+ * - ISO 8601: `YYYY-MM-DDTHH:MM:SS.mmm`
+ * - Y: Year (4 digits)
+ * - M: Month (01-12)
+ * - D: Day (01-31)
+ * - H: Hour (00-23)
+ * - M: Minute (00-59)
+ * - S: Second (00-59)
+ * - m: Millisecond (000-999)
+ *
+ * **Example Output:**
+ * @code
+ * 2025-11-22T14:30:25.123
+ * @endcode
+ *
+ * **Use Cases:**
+ * - Timestamping log entries
+ * - Recording event times
+ * - Synchronization verification
+ * - Date/time formatting reference
+ *
+ * @note Uses local system time (not UTC)
+ * @note Millisecond precision depends on system clock resolution
+ */
 class DateTimeCommand : public ICommand
 {
 public:

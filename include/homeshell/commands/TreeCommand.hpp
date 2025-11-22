@@ -13,6 +13,64 @@
 namespace homeshell
 {
 
+/**
+ * @brief Display directory tree structure recursively
+ *
+ * @details The `tree` command provides a visual tree representation of directory
+ * hierarchies, showing all files and subdirectories recursively. Directories are
+ * displayed first (in blue, bold) followed by files, with ASCII tree characters
+ * showing the structure.
+ *
+ * **Features:**
+ * - Recursive directory traversal
+ * - Visual tree structure with ASCII art (├──, └──, │)
+ * - Directories shown before files (alphabetically sorted within each group)
+ * - Color-coded output (directories in blue/bold, files in default color)
+ * - Summary statistics (directory and file count)
+ * - Works with both regular and virtual encrypted filesystems
+ *
+ * **Usage:**
+ * @code
+ * tree [path]
+ * @endcode
+ *
+ * **Parameters:**
+ * - `path` - Directory to display (optional, default: current directory)
+ *
+ * **Example Output:**
+ * @code
+ * /home/user/project
+ * ├── src/
+ * │   ├── commands/
+ * │   │   ├── CdCommand.hpp
+ * │   │   └── LsCommand.hpp
+ * │   ├── main.cpp
+ * │   └── Shell.cpp
+ * ├── tests/
+ * │   └── test_commands.cpp
+ * ├── CMakeLists.txt
+ * └── README.md
+ *
+ * 2 directories, 6 files
+ * @endcode
+ *
+ * **Use Cases:**
+ * - Visualizing project structure
+ * - Documenting directory layouts
+ * - Finding files in deep hierarchies
+ * - Exploring unfamiliar codebases
+ * - Verifying directory organization
+ *
+ * **Tree Structure Symbols:**
+ * - `├──` - Item with siblings below
+ * - `└──` - Last item in directory
+ * - `│` - Vertical line for nested levels
+ * - `/` - Directory suffix
+ *
+ * @note Large directory trees may produce extensive output
+ * @note Symbolic links are followed (may cause loops on circular links)
+ * @note Works with virtual filesystem paths (e.g., `/secure/`)
+ */
 class TreeCommand : public ICommand
 {
 public:

@@ -120,3 +120,49 @@ TEST_F(CatCommandTest, DirectoryError)
     EXPECT_FALSE(status.isSuccess());
 }
 
+// Additional edge case tests for better coverage
+TEST_F(CatCommandTest, LargeFile)
+{
+    // Create a larger file
+    auto large_file = test_dir_ / "large.txt";
+    std::ofstream file(large_file);
+    for (int i = 0; i < 1000; ++i)
+    {
+        file << "Line " << i << " with some content to make it longer\n";
+    }
+    file.close();
+    
+    homeshell::CatCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {large_file.string()};
+    
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_TRUE(output.find("Line 0") != std::string::npos);
+    EXPECT_TRUE(output.find("Line 999") != std::string::npos);
+}
+
+TEST_F(CatCommandTest, FileWithSpecialCharacters)
+{
+    // Create file with special characters
+    auto special_file = test_dir_ / "special.txt";
+    std::ofstream file(special_file);
+    file << "Tab:\t\nNewline:\n\nSpecial: !@#$%^&*()";
+    file.close();
+    
+    homeshell::CatCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {special_file.string()};
+    
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    std::string output = testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_TRUE(output.find("Tab:") != std::string::npos);
+    EXPECT_TRUE(output.find("Special:") != std::string::npos);
+}
+

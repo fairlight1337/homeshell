@@ -15,13 +15,70 @@
 namespace homeshell
 {
 
+/**
+ * @brief Result of a single ICMP ping operation
+ *
+ * @details Contains the outcome of a ping attempt, including success status,
+ * round-trip time, and any error messages.
+ */
 struct PingResult
 {
-    bool success = false;
-    double rtt_ms = 0.0;
-    std::string error;
+    bool success = false; ///< Whether the ping was successful
+    double rtt_ms = 0.0;  ///< Round-trip time in milliseconds
+    std::string error;    ///< Error message if ping failed
 };
 
+/**
+ * @brief Low-level ICMP ping implementation
+ *
+ * @details Provides raw ICMP echo request/reply functionality for network diagnostics.
+ * Implements cancellable ping operations using raw sockets.
+ *
+ * **Features:**
+ * - Raw ICMP socket implementation
+ * - Cancellable operations
+ * - Configurable timeout
+ * - Round-trip time measurement (microsecond precision)
+ * - Hostname resolution (DNS lookup)
+ * - IPv4 support
+ *
+ * **Requirements:**
+ * - Linux/Unix platform
+ * - CAP_NET_RAW capability or root privileges
+ * - Set capability: `sudo setcap cap_net_raw+ep ./homeshell-linux`
+ *
+ * **Usage Example:**
+ * @code
+ * IcmpPing pinger;
+ *
+ * // Ping with 1 second timeout
+ * PingResult result = pinger.ping("8.8.8.8", 1000);
+ * if (result.success) {
+ *     fmt::print("RTT: {:.2f}ms\n", result.rtt_ms);
+ * } else {
+ *     fmt::print("Error: {}\n", result.error);
+ * }
+ *
+ * // Cancellable ping
+ * std::thread ping_thread([&pinger]() {
+ *     pinger.ping("example.com", 5000);
+ * });
+ *
+ * // Cancel from another thread
+ * pinger.cancel();
+ * ping_thread.join();
+ * @endcode
+ *
+ * **Error Conditions:**
+ * - "Failed to resolve host" - DNS lookup failed
+ * - "Failed to create socket" - Insufficient privileges (need CAP_NET_RAW)
+ * - "Request timeout" - No response within timeout period
+ * - "Cancelled" - Operation cancelled by user
+ *
+ * @note Requires raw socket access (CAP_NET_RAW capability on Linux)
+ * @note Thread-safe cancellation via atomic flag
+ * @note Uses ICMP echo (type 8) and echo reply (type 0)
+ */
 class IcmpPing
 {
 public:
@@ -30,16 +87,41 @@ public:
     {
     }
 
+    /**
+     * @brief Cancel ongoing ping operation
+     *
+     * @details Sets cancellation flag to abort current or future ping operations.
+     * Thread-safe and can be called from any thread.
+     */
     void cancel()
     {
         cancelled_.store(true);
     }
 
+    /**
+     * @brief Check if ping has been cancelled
+     *
+     * @return true if cancel() has been called, false otherwise
+     */
     bool isCancelled() const
     {
         return cancelled_.load();
     }
 
+    /**
+     * @brief Send ICMP echo request and wait for reply
+     *
+     * @param host Hostname or IP address to ping
+     * @param timeout_ms Maximum time to wait for response in milliseconds (default: 1000ms)
+     * @return PingResult containing success status, RTT, or error message
+     *
+     * @details Performs DNS lookup if hostname provided, creates raw ICMP socket,
+     * sends echo request, and waits for echo reply. Operation can be cancelled
+     * via cancel() method.
+     *
+     * @note Requires CAP_NET_RAW capability or root privileges
+     * @note Blocks until reply received, timeout expires, or operation cancelled
+     */
     PingResult ping(const std::string& host, int timeout_ms = 1000)
     {
         PingResult result;

@@ -14,6 +14,97 @@
 namespace homeshell
 {
 
+/**
+ * @brief Determine file type via magic number detection
+ *
+ * @details The `file` command identifies file types by examining file contents
+ * using magic numbers (byte signatures), file structure analysis, and text heuristics.
+ * Similar to the Unix `file` command but integrated into Homeshell.
+ *
+ * **Detection Methods:**
+ * 1. **Magic Numbers** - Binary signatures in file headers
+ * 2. **Text Analysis** - Character encoding and format patterns
+ * 3. **Structure Detection** - JSON, XML, HTML document structure
+ * 4. **Script Detection** - Shebang (#!) interpreter lines
+ *
+ * **Supported File Types:**
+ *
+ * **Images:**
+ * - PNG, JPEG, GIF (via magic numbers)
+ *
+ * **Documents:**
+ * - PDF, XML, HTML, JSON
+ *
+ * **Archives:**
+ * - ZIP (including JAR, DOCX, etc.), gzip, bzip2
+ *
+ * **Executables:**
+ * - ELF (Linux binaries)
+ *
+ * **Databases:**
+ * - SQLite 3.x
+ *
+ * **Scripts:**
+ * - Shell scripts, Python, Perl, Ruby (via shebang)
+ *
+ * **Text:**
+ * - ASCII text, UTF-8 text
+ *
+ * **Usage:**
+ * @code
+ * file <path> [path2 ...]
+ * @endcode
+ *
+ * **Parameters:**
+ * - `path` - One or more file paths to analyze
+ *
+ * **Examples:**
+ * @code
+ * file document.pdf
+ * # Output: document.pdf: PDF document
+ *
+ * file image.png script.py data.json
+ * # Output:
+ * # image.png: PNG image data
+ * # script.py: script, #!/usr/bin/env python3
+ * # data.json: JSON data
+ *
+ * file /secure/encrypted.db
+ * # Output: /secure/encrypted.db: SQLite 3.x database
+ *
+ * file *
+ * # Analyze all files in current directory
+ * @endcode
+ *
+ * **Color Coding:**
+ * - Blue: Directories
+ * - Magenta: Images (PNG, JPEG, GIF)
+ * - Cyan: Documents (PDF, JSON)
+ * - Yellow: Archives (ZIP, gzip, bzip2)
+ * - Green: Executables (ELF), structured text (XML, HTML)
+ * - Red: Errors (file not found, cannot read)
+ * - Default: Text files, unknown types
+ *
+ * **Detection Algorithm:**
+ * 1. Check if file exists and is readable
+ * 2. Identify directories immediately
+ * 3. Check magic numbers for binary formats
+ * 4. Analyze text vs binary (null bytes, non-printable chars)
+ * 5. For text files, check shebang and structure
+ * 6. Apply heuristics for JSON, XML, HTML
+ * 7. Default to "ASCII text" or "data"
+ *
+ * **Error Handling:**
+ * - Non-existent files: Shows error, continues with remaining files
+ * - Unreadable files: Shows error, continues
+ * - Empty files: Identified as "empty"
+ * - Returns error status if any file failed
+ *
+ * @note Works with virtual filesystem paths
+ * @note Magic number detection limited to first few bytes
+ * @note Text detection examines first 512 bytes
+ * @note Binary threshold: >30% non-printable characters
+ */
 class FileCommand : public ICommand
 {
 public:

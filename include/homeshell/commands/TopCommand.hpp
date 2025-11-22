@@ -20,16 +20,72 @@
 namespace homeshell
 {
 
+/**
+ * @brief Process information structure
+ *
+ * @details Contains information about a running process including its PID,
+ * owner, command, resource usage, and execution state.
+ */
 struct ProcessInfo
 {
-    int pid;
-    std::string user;
-    std::string command;
-    double cpu_percent;
-    unsigned long mem_kb;
-    char state;
+    int pid;              ///< Process ID
+    std::string user;     ///< User/owner of the process
+    std::string command;  ///< Command name or full command line
+    double cpu_percent;   ///< CPU usage percentage (0-100+)
+    unsigned long mem_kb; ///< Memory usage in kilobytes
+    char state;           ///< Process state (R=running, S=sleeping, Z=zombie, etc.)
 };
 
+/**
+ * @brief Display running processes command (Linux only)
+ *
+ * @details The `top` command provides a snapshot of running processes on Linux systems,
+ * similar to the traditional `top` utility but simplified for quick process monitoring.
+ *
+ * **Platform Support:**
+ * - Linux: Full support via `/proc` filesystem
+ * - Other platforms: Not supported (returns error)
+ *
+ * **Features:**
+ * - Process listing from `/proc` filesystem
+ * - CPU usage highlighting (red >50%, yellow >20%, white otherwise)
+ * - Memory usage in KB
+ * - Process state indicators (R=running, S=sleeping, etc.)
+ * - Sorted by CPU usage (highest first)
+ * - Limited to top 25 processes
+ * - Full command line display (truncated to 60 chars)
+ *
+ * **Usage:**
+ * @code
+ * top
+ * @endcode
+ *
+ * **Example Output:**
+ * @code
+ *     PID    S   CPU%  MEM(KB) COMMAND
+ * ------------------------------------------------------------
+ *    1234    R   45.2    12345 firefox --profile /home/user/.mozilla...
+ *    5678    S   12.3     8192 chrome --type=renderer
+ *    9012    S    5.1     4096 python script.py
+ *
+ * Showing 3 of 156 processes
+ * @endcode
+ *
+ * **Process States:**
+ * - R: Running or runnable (on run queue)
+ * - S: Sleeping (waiting for an event)
+ * - D: Uninterruptible sleep (usually I/O)
+ * - Z: Zombie (terminated but not reaped)
+ * - T: Stopped (by job control signal)
+ * - t: Stopped (by debugger during tracing)
+ * - W: Paging
+ * - X: Dead
+ * - ?: Unknown state
+ *
+ * @note CPU percentage calculation is simplified and may not reflect accurate CPU usage
+ * @note Requires read access to `/proc` filesystem
+ * @note On non-Linux platforms, returns an error
+ */
 class TopCommand : public ICommand
 {
 public:

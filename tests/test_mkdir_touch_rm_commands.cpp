@@ -4,6 +4,8 @@
 #include <gtest/gtest.h>
 #include <filesystem>
 #include <fstream>
+#include <chrono>
+#include <thread>
 
 namespace fs = std::filesystem;
 
@@ -217,5 +219,65 @@ TEST_F(FileCommandsTest, RmNonExistent)
     testing::internal::GetCapturedStdout();
     
     EXPECT_FALSE(status.isSuccess());
+}
+
+// Additional edge case tests for better coverage
+TEST_F(FileCommandsTest, MkdirNestedPath)
+{
+    homeshell::MkdirCommand cmd;
+    homeshell::CommandContext ctx;
+    // Create parent first
+    fs::create_directory(test_dir_ / "parent");
+    ctx.args = {(test_dir_ / "parent" / "child").string()};
+    
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_TRUE(fs::exists(test_dir_ / "parent" / "child"));
+}
+
+TEST_F(FileCommandsTest, TouchUpdatesTimestamp)
+{
+    // Create file
+    auto existing = test_dir_ / "timestamp_test.txt";
+    std::ofstream(existing) << "content";
+    auto old_time = fs::last_write_time(existing);
+    
+    // Sleep a tiny bit to ensure timestamp difference
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    
+    homeshell::TouchCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {existing.string()};
+    
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    // Timestamp should be updated
+    auto new_time = fs::last_write_time(existing);
+    EXPECT_NE(old_time, new_time);
+}
+
+TEST_F(FileCommandsTest, RmDeepNestedDirectory)
+{
+    // Create deep directory structure
+    auto deep = test_dir_ / "level1" / "level2" / "level3";
+    fs::create_directories(deep);
+    std::ofstream(deep / "file.txt") << "content";
+    
+    homeshell::RmCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {(test_dir_ / "level1").string()};
+    
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+    
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_FALSE(fs::exists(test_dir_ / "level1"));
 }
 
