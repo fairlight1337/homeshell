@@ -49,6 +49,28 @@ A modern, interactive C++20 shell with advanced features including line editing,
 - **Bash-compatible** - Support for `>`, `>>`, `2>`, `2>>`, `&>`, `&>>`
 - **Flexible Routing** - Redirect stdout, stderr, or both
 - **Virtual Filesystem** - Works with encrypted mounts and regular files
+- **Color Stripping** - ANSI color codes automatically removed when redirecting to files
+
+### 🐍 Embedded Python
+- **MicroPython Integration** - Full Python interpreter embedded in the shell
+- **No External Dependencies** - Python runtime statically linked into the binary
+- **Interactive REPL** - Full-featured Python REPL with history and multiline editing
+- **Script Execution** - Run `.py` files directly within the shell
+- **Core Modules** - math, collections, json, re, hashlib, time, and more
+- **Secure** - File I/O disabled for safety, focuses on computation and logic
+
+### 📝 Text Editor
+- **Built-in Editor** - nano-style text editor using ncurses
+- **Full-screen Editing** - Comfortable editing experience
+- **Keyboard Shortcuts** - Familiar Ctrl+O (save), Ctrl+X (exit), Ctrl+K (cut), Ctrl+U (paste)
+- **Line Navigation** - Ctrl+A (line start), Ctrl+E (line end)
+- **Works Everywhere** - Edits both regular files and encrypted virtual filesystem files
+
+### 🔧 Executable Support
+- **Direct Execution** - Run any executable file using its path (e.g., `./script.sh`)
+- **Shell Scripts** - Execute bash, Python, or any shebang-based scripts
+- **System Binaries** - Call system utilities with full paths
+- **Permission Management** - Built-in `chmod` command (octal and symbolic modes)
 
 ### 📦 Static Linking
 - **Minimal Dependencies** - Most libraries statically linked into the binary
@@ -57,9 +79,9 @@ A modern, interactive C++20 shell with advanced features including line editing,
   - C++ standard library (libstdc++)
   - GCC runtime (libgcc)
   - Terminal UI (libncurses, libtinfo)
-  - All third-party libraries (fmt, replxx, sqlcipher, miniz)
+  - All third-party libraries (fmt, replxx, sqlcipher, miniz, micropython)
 - **Dynamic Only:** Core system libraries (libc, libm, linux-vdso)
-- **Binary Size:** ~12MB with all features included
+- **Binary Size:** ~12MB with all features included (including full Python interpreter!)
 
 ## Quick Start
 
@@ -78,6 +100,11 @@ cd external/sqlcipher
 ./configure CFLAGS="-DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=2" LDFLAGS="-lcrypto"
 make sqlite3.c
 cd ../..
+
+# Build MicroPython embed files (required for python command)
+cd external
+make -f micropython_build.mk
+cd ..
 
 # Build Homeshell
 mkdir build
@@ -261,8 +288,13 @@ Tab completion works for:
 | `lsblk` | List block devices and partitions | Sync |
 | `sysinfo` | Show comprehensive system information | Sync |
 | `datetime` | Show current date/time in ISO format | Sync |
+| `chmod` | Change file permissions (octal/symbolic) | Sync |
+| `version` | Show Homeshell and library versions | Sync |
+| `python` | MicroPython interpreter and script executor | Sync |
 | `ping` | Ping a host | Async |
 | `sleep` | Sleep for N seconds (async demo) | Async |
+
+**Note:** Homeshell can also execute external scripts and binaries using file paths (e.g., `./script.sh`, `/usr/bin/python3`, `../tools/mytool`). Any command containing a `/` is treated as an executable file path.
 
 #### Filesystem Commands
 
@@ -424,6 +456,78 @@ Tab completion works for:
 - Show current date and time in ISO 8601 format
 - Format: `YYYY-MM-DDTHH:MM:SS.mmm`
 - Example output: `2025-11-21T14:30:25.123`
+
+**`chmod <mode> <file>...`**
+- Change file permissions
+- Supports both octal and symbolic notation
+- **Octal mode:**
+  - `chmod 755 script.sh` - rwxr-xr-x (executable by all)
+  - `chmod 0644 file.txt` - rw-r--r-- (readable by all, writable by owner)
+- **Symbolic mode:**
+  - `chmod +x script.sh` - Add execute permission for all
+  - `chmod u+x file` - Add execute for user (owner)
+  - `chmod g-w file` - Remove write for group
+  - `chmod o=r file` - Set others to read-only
+  - `chmod a+rw file` - Add read/write for all (user, group, others)
+- Multiple files: `chmod +x script1.sh script2.sh`
+- Works with real filesystem only (not virtual filesystem paths)
+
+**`version`**
+- Display Homeshell version and all embedded library versions
+- Shows versions for:
+  - Homeshell (version and build flavor)
+  - MicroPython interpreter
+  - SQLCipher (database encryption)
+  - miniz (ZIP compression)
+  - fmt (text formatting)
+  - CLI11 (command-line parsing)
+  - nlohmann/json (JSON parsing)
+  - replxx (line editing)
+- Useful for debugging and verifying the build
+- Example: `version`
+
+**`python [options] [file]`**
+- Embedded MicroPython interpreter (no Python installation required!)
+- **Interactive REPL:**
+  - Run `python` with no arguments to start the REPL
+  - Supports multiline editing for functions, loops, classes
+  - Persistent history and line editing
+  - Type `exit()` or press Ctrl-D to quit
+- **Execute script:**
+  - `python script.py` - Run a Python script file
+  - `python -c "print('Hello!')"` - Execute Python code directly
+- **Features:**
+  - Python 3 syntax support
+  - Built-in modules: math, collections, json, re, hashlib, time
+  - No file I/O (security restriction)
+  - Statically linked - no external Python installation needed
+- **Limitations:**
+  - No file system access (import from files disabled)
+  - No external packages/pip
+  - Limited to core Python language features
+- Examples:
+  ```bash
+  # Start interactive Python REPL
+  python
+  
+  # Execute a Python script
+  python /tmp/calculate.py
+  
+  # Run inline Python code
+  python -c "for i in range(5): print(f'Count: {i}')"
+  ```
+
+**`./path/to/script` or `/absolute/path/to/binary`**
+- Execute external scripts and binaries directly
+- Any command containing a `/` is treated as an executable file path
+- The file must have execute permissions (use `chmod +x` if needed)
+- Examples:
+  - `./build_project.sh` - Run script in current directory
+  - `../tools/deploy.sh` - Run script in parent directory
+  - `/usr/bin/python3 script.py` - Run system Python
+  - `/tmp/my_program` - Run binary from /tmp
+- Arguments are passed through: `./script.sh arg1 arg2`
+- Supports any shebang: `#!/bin/bash`, `#!/usr/bin/env python3`, etc.
 
 **`ping <host> [count]`**
 - Ping a network host using ICMP echo (async command)
@@ -879,6 +983,7 @@ All dependencies are managed as git submodules:
 - **[Replxx](https://github.com/AmokHuginnsson/replxx)** - Interactive line editing
 - **[SQLCipher](https://github.com/sqlcipher/sqlcipher)** - Encrypted database storage
 - **[miniz](https://github.com/richgel999/miniz)** - ZIP archive compression/decompression (built directly from source)
+- **[MicroPython](https://github.com/micropython/micropython)** - Embedded Python 3 interpreter (statically linked)
 - **[Google Test](https://github.com/google/googletest)** - Unit testing framework
 
 **Note on miniz**: The miniz library is built directly from its source files without modifying the submodule. A compatibility header (`include/miniz_compat/miniz_export.h`) is provided to satisfy miniz's build requirements while keeping the submodule clean and reproducible.

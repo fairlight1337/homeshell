@@ -10,9 +10,13 @@
 
 #include <fmt/color.h>
 #include <fmt/core.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <atomic>
 #include <csignal>
+#include <cstring>
 #include <future>
 #include <memory>
 #include <replxx.hxx>
@@ -388,6 +392,12 @@ private:
         std::string cmd_name = tokens[0];
         std::vector<std::string> args(tokens.begin() + 1, tokens.end());
 
+        // Check if this is an executable file path (starts with ./, ../, or / or contains /)
+        if (cmd_name.find("/") != std::string::npos)
+        {
+            return executeExecutableFile(cmd_name, args);
+        }
+
         // Look up command
         auto& registry = CommandRegistry::getInstance();
         auto command = registry.getCommand(cmd_name);
@@ -420,6 +430,69 @@ private:
 
         // Redirection is automatically restored by OutputRedirection destructor
         return result;
+    }
+
+    Status executeExecutableFile(const std::string& path, const std::vector<std::string>& args)
+    {
+        // Check if file exists and is executable
+        struct stat st;
+        if (stat(path.c_str(), &st) != 0)
+        {
+            return Status::error(fmt::format("File not found: {}", path));
+        }
+
+        if (!(st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
+        {
+            return Status::error(fmt::format("File is not executable: {}", path));
+        }
+
+        // Fork and execute
+        pid_t pid = fork();
+        if (pid == -1)
+        {
+            return Status::error(fmt::format("Failed to fork: {}", strerror(errno)));
+        }
+
+        if (pid == 0) // Child process
+        {
+            // Prepare arguments
+            std::vector<char*> c_args;
+            c_args.push_back(const_cast<char*>(path.c_str()));
+            for (const auto& arg : args)
+            {
+                c_args.push_back(const_cast<char*>(arg.c_str()));
+            }
+            c_args.push_back(nullptr);
+
+            // Execute
+            execv(path.c_str(), c_args.data());
+
+            // If we reach here, exec failed
+            fmt::print(stderr, "Failed to execute {}: {}\n", path, strerror(errno));
+            exit(1);
+        }
+        else // Parent process
+        {
+            int status;
+            waitpid(pid, &status, 0);
+
+            if (WIFEXITED(status))
+            {
+                int exit_code = WEXITSTATUS(status);
+                if (exit_code != 0)
+                {
+                    return Status::error(fmt::format("Process exited with code {}", exit_code));
+                }
+                return Status::ok();
+            }
+            else if (WIFSIGNALED(status))
+            {
+                return Status::error(
+                    fmt::format("Process terminated by signal {}", WTERMSIG(status)));
+            }
+
+            return Status::error("Process terminated abnormally");
+        }
     }
 
     Status executeAsync(std::shared_ptr<ICommand> command, const CommandContext& context)

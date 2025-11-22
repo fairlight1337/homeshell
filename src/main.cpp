@@ -7,6 +7,7 @@
 #include <homeshell/VirtualFilesystem.hpp>
 #include <homeshell/commands/CatCommand.hpp>
 #include <homeshell/commands/CdCommand.hpp>
+#include <homeshell/commands/ChmodCommand.hpp>
 #include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/EditCommand.hpp>
@@ -22,6 +23,7 @@
 #include <homeshell/commands/MountCommand.hpp>
 #include <homeshell/commands/PingCommand.hpp>
 #include <homeshell/commands/PwdCommand.hpp>
+#include <homeshell/commands/PythonCommand.hpp>
 #include <homeshell/commands/RmCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
 #include <homeshell/commands/SysinfoCommand.hpp>
@@ -30,6 +32,7 @@
 #include <homeshell/commands/TreeCommand.hpp>
 #include <homeshell/commands/UnmountCommand.hpp>
 #include <homeshell/commands/UnzipCommand.hpp>
+#include <homeshell/commands/VersionCommand.hpp>
 #include <homeshell/commands/VfsCommand.hpp>
 #include <homeshell/commands/ZipCommand.hpp>
 #include <homeshell/commands/ZipInfoCommand.hpp>
@@ -209,6 +212,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<MkdirCommand>());
     registry.registerCommand(std::make_shared<TouchCommand>());
     registry.registerCommand(std::make_shared<RmCommand>());
+    registry.registerCommand(std::make_shared<ChmodCommand>());
     registry.registerCommand(std::make_shared<FileCommand>());
     registry.registerCommand(std::make_shared<TreeCommand>());
     registry.registerCommand(std::make_shared<EditCommand>());
@@ -234,6 +238,10 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<LsblkCommand>());
     registry.registerCommand(std::make_shared<SysinfoCommand>());
 
+    // Scripting and info commands
+    registry.registerCommand(std::make_shared<PythonCommand>());
+    registry.registerCommand(std::make_shared<VersionCommand>());
+
     // Create the shell
     Shell shell(config, terminal_info);
 
@@ -241,6 +249,10 @@ int main(int argc, char** argv)
     if (!execute_command.empty())
     {
         Status status = shell.executeCommandLine(execute_command);
+        if (!status.isSuccess() && !status.message.empty())
+        {
+            fmt::print(stderr, "{}\n", status.message);
+        }
         return status.code;
     }
 

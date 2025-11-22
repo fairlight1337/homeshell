@@ -74,6 +74,54 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(miniz PRIVATE -w)
 endif()
 
+# Add MicroPython embedded interpreter
+# First, check if micropython_embed directory exists
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/external/micropython_embed)
+    message(STATUS "MicroPython embed files not found, generating...")
+    execute_process(
+        COMMAND make -f micropython_build.mk
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external
+        RESULT_VARIABLE MICROPYTHON_BUILD_RESULT
+    )
+    if(NOT MICROPYTHON_BUILD_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to build MicroPython embed files")
+    endif()
+endif()
+
+# Collect all MicroPython source files
+file(GLOB MICROPYTHON_SOURCES
+    ${CMAKE_SOURCE_DIR}/external/micropython_embed/py/*.c
+    ${CMAKE_SOURCE_DIR}/external/micropython_embed/shared/runtime/*.c
+    ${CMAKE_SOURCE_DIR}/external/micropython_embed/port/*.c
+)
+
+add_library(micropython STATIC 
+    ${MICROPYTHON_SOURCES}
+    ${CMAKE_SOURCE_DIR}/src/micropython_port.c
+)
+
+target_include_directories(micropython
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/external/micropython_embed
+        ${CMAKE_SOURCE_DIR}/external/micropython_embed/port
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/external/micropython_embed/py
+        ${CMAKE_SOURCE_DIR}/external/micropython_embed/genhdr
+)
+
+# MicroPython compile options
+target_compile_definitions(micropython PRIVATE
+    MICROPY_QSTR_EXTRA_POOL=mp_qstr_frozen_const_pool
+)
+
+# Suppress warnings from MicroPython (third-party code)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(micropython PRIVATE -w)
+endif()
+
+# MicroPython requires math library
+target_link_libraries(micropython PRIVATE m)
+
 # Add Google Test for unit testing
 option(BUILD_TESTING "Build tests" ON)
 if(BUILD_TESTING)
@@ -88,6 +136,9 @@ add_library(homeshell
     src/EncryptedMount.cpp
     src/VirtualFilesystem.cpp
     src/OutputRedirection.cpp
+    src/commands/PythonCommand.cpp
+    src/commands/ChmodCommand.cpp
+    src/commands/VersionCommand.cpp
 )
 
 target_include_directories(homeshell
@@ -95,6 +146,7 @@ target_include_directories(homeshell
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/sqlcipher>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/micropython_embed>
         $<INSTALL_INTERFACE:include>
 )
 
@@ -108,6 +160,9 @@ add_executable(homeshell-linux
 target_link_libraries(homeshell
     PUBLIC
         sqlcipher
+        micropython
+        fmt::fmt
+        replxx
 )
 
 # Find ncurses for the editor
@@ -153,6 +208,7 @@ target_link_libraries(homeshell-linux
         fmt::fmt
         replxx
         miniz
+        micropython
         ${NCURSES_LINK_LIBRARIES}
 )
 
