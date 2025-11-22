@@ -44,33 +44,34 @@ struct UsbDevice
  *          - Color-coded output for better readability
  *
  *          Command syntax:
- *          ```
+ *          @code
  *          lsusb
- *          ```
+ *          @endcode
  *
  *          Output format:
- *          ```
+ *          @code
  *          Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
  *          Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
  *          Bus 002 Device 003: ID 046d:c52b Logitech, Inc. Unifying Receiver
- *          ```
+ *          @endcode
  *
- *          Information is gathered from:
- *          - /sys/bus/usb/devices/*/
-    busnum * - / sys / bus / usb /
-    devices /*/devnum
-             *          - /sys/bus/usb/devices/*/
-        idVendor *
-    - / sys / bus / usb /
-    devices /*/idProduct
-             *          - /sys/bus/usb/devices/*/
-        manufacturer *
-    - / sys / bus / usb /
-    devices /*/product
-             *          - /sys/bus/usb/devices/*/
-        speed** Example usage
-    : * ``` * lsusb #List all USB devices* ``` ** @note Linux only.On other platforms
-    , reports "not supported".* / class LsusbCommand : public ICommand
+ *          Information is gathered from sysfs:
+ *          - busnum (bus number)
+ *          - devnum (device number)
+ *          - idVendor (vendor ID)
+ *          - idProduct (product ID)
+ *          - manufacturer (vendor name)
+ *          - product (product name)
+ *          - speed (connection speed)
+ *
+ * Example usage:
+ * @code
+ * lsusb                       // List all USB devices
+ * @endcode
+ *
+ * @note Linux only. On other platforms, reports "not supported".
+ */
+class LsusbCommand : public ICommand
 {
 public:
     std::string getName() const override

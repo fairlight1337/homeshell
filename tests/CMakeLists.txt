@@ -21,6 +21,15 @@ add_executable(homeshell_tests
 # Disable clang-tidy for tests
 set_target_properties(homeshell_tests PROPERTIES CXX_CLANG_TIDY "")
 
+# Apply coverage flags to tests if enabled
+if(ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(homeshell_tests PRIVATE --coverage -fprofile-arcs -ftest-coverage -O0 -g)
+        target_link_options(homeshell_tests PRIVATE --coverage)
+        message(STATUS "Coverage flags applied to homeshell_tests")
+    endif()
+endif()
+
 target_link_libraries(homeshell_tests
     PRIVATE
         homeshell
