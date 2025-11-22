@@ -12,6 +12,45 @@
 namespace homeshell
 {
 
+/**
+ * @brief Display file contents
+ *
+ * Reads and displays the entire contents of a file to standard output.
+ * Works with both regular files and files in encrypted virtual mounts.
+ *
+ * @details The cat command reads a file and outputs its contents verbatim.
+ *          It can handle text and binary files, and ensures output ends
+ *          with a newline if the file doesn't.
+ *
+ *          Features:
+ *          - Read regular filesystem files
+ *          - Read encrypted virtual filesystem files
+ *          - Automatic newline appending
+ *          - Error handling for missing/invalid files
+ *
+ *          Command syntax:
+ *          ```
+ *          cat <filename>
+ *          ```
+ *
+ *          Errors reported:
+ *          - File not found
+ *          - Path is a directory (not a file)
+ *          - Read permission denied
+ *          - Failed to read file content
+ *
+ * Example usage:
+ * ```
+ * cat myfile.txt              # Display myfile.txt
+ * cat /etc/hosts              # Display system file
+ * cat /secure/secrets.txt     # Display encrypted file
+ * ```
+ *
+ * @note Unlike bash cat, this does not support:
+ *       - Multiple file arguments
+ *       - Reading from stdin (-)
+ *       - Options like -n (line numbers), -b (blank lines), etc.
+ */
 class CatCommand : public ICommand
 {
 public:
@@ -30,6 +69,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the cat command
+     * @param context Command context with filename argument
+     * @return Status::ok() on success, Status::error() if file invalid
+     */
     Status execute(const CommandContext& context) override
     {
         if (context.args.empty())

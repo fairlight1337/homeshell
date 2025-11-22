@@ -8,18 +8,60 @@
 namespace homeshell
 {
 
+/**
+ * @brief Terminal color capability levels
+ *
+ * Defines the various levels of color support that a terminal may provide.
+ * Used to adapt output formatting to terminal capabilities.
+ */
 enum class ColorSupport
 {
-    None,
-    Basic8,     // 8 colors
-    Extended16, // 16 colors
-    Colors256,  // 256 colors
-    TrueColor   // 24-bit RGB
+    None,       ///< No color support (monochrome)
+    Basic8,     ///< Basic 8 ANSI colors
+    Extended16, ///< Extended 16 ANSI colors
+    Colors256,  ///< 256-color palette
+    TrueColor   ///< 24-bit RGB true color (16.7M colors)
 };
 
+/**
+ * @brief Terminal capability detection
+ *
+ * Detects and reports various terminal capabilities including color support,
+ * UTF-8/emoji support, and TTY status. Used to adapt shell output to the
+ * terminal's capabilities.
+ *
+ * @details Detection process:
+ *          - TTY: Checks if stdout is a terminal (vs. pipe/redirect)
+ *          - Colors: Examines $COLORTERM and $TERM environment variables
+ *          - UTF-8: Checks $LANG and $LC_ALL for UTF-8 locales
+ *          - Emoji: Assumes support if UTF-8 is available
+ *
+ *          This class is not instantiable directly; use detect() static method.
+ *
+ * Example usage:
+ * ```cpp
+ * TerminalInfo info = TerminalInfo::detect();
+ * if (info.hasColorSupport()) {
+ *     // Use colored output
+ * }
+ * if (info.hasEmojiSupport()) {
+ *     // Use emoji in messages
+ * }
+ * ```
+ */
 class TerminalInfo
 {
 public:
+    /**
+     * @brief Detect current terminal capabilities
+     * @return TerminalInfo struct with detected capabilities
+     *
+     * @details Performs detection by checking:
+     *          - isatty() for TTY status
+     *          - COLORTERM env var for true color
+     *          - TERM env var for color support level
+     *          - LANG/LC_ALL for UTF-8 encoding
+     */
     static TerminalInfo detect()
     {
         TerminalInfo info;
@@ -85,32 +127,55 @@ public:
         return info;
     }
 
+    /**
+     * @brief Check if running in a TTY
+     * @return true if stdout is a terminal, false if piped/redirected
+     */
     bool isTTY() const
     {
         return is_tty_;
     }
 
+    /**
+     * @brief Get the color support level
+     * @return Color capability enum value
+     */
     ColorSupport getColorSupport() const
     {
         return color_support_;
     }
 
+    /**
+     * @brief Check if terminal supports colors
+     * @return true if any color support available, false if monochrome
+     */
     bool hasColorSupport() const
     {
         return color_support_ != ColorSupport::None;
     }
 
+    /**
+     * @brief Check if terminal supports UTF-8 encoding
+     * @return true if UTF-8 supported, false otherwise
+     */
     bool hasUTF8Support() const
     {
         return utf8_support_;
     }
 
+    /**
+     * @brief Check if terminal supports emoji
+     * @return true if emoji supported, false otherwise
+     */
     bool hasEmojiSupport() const
     {
         return emoji_support_;
     }
 
 private:
+    /**
+     * @brief Private constructor - use detect() instead
+     */
     TerminalInfo() = default;
 
     bool is_tty_ = false;

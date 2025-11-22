@@ -28,9 +28,60 @@
 namespace homeshell
 {
 
+/**
+ * @brief Main shell execution engine
+ *
+ * The Shell class is the heart of Homeshell, providing:
+ * - Interactive REPL (Read-Eval-Print-Loop)
+ * - Command parsing and execution
+ * - Signal handling (Ctrl+C, Ctrl+D)
+ * - Command history management
+ * - Tab completion for commands and files
+ * - Output redirection (>, >>)
+ * - Asynchronous command execution
+ * - Executable file execution (./ prefix)
+ *
+ * @details The shell operates in a continuous loop:
+ *          1. Display prompt with current directory
+ *          2. Read user input (with completion and history)
+ *          3. Parse command line (handle redirection, tokenization)
+ *          4. Execute command (sync or async)
+ *          5. Handle signals (interrupts, cancellation)
+ *          6. Display results or errors
+ *
+ *          Special features:
+ *          - Tab completion for commands, files, and directories
+ *          - Ctrl+C interrupt handling (cancels async commands)
+ *          - Ctrl+D exits the shell
+ *          - Persistent command history (saved on exit)
+ *          - Output redirection to files (> and >>)
+ *          - Color stripping for redirected output
+ *          - Executable file support (./ prefix or containing /)
+ *          - Virtual filesystem integration
+ *
+ *          Architecture:
+ *          - Uses replxx library for advanced line editing
+ *          - CommandRegistry for command lookup
+ *          - VirtualFilesystem for unified file access
+ *          - OutputRedirection for stream management
+ *          - Signal handler for interrupt processing
+ *
+ * Example usage:
+ * ```cpp
+ * Config config = Config::loadFromFile("config.json");
+ * TerminalInfo term_info = TerminalInfo::detect();
+ * Shell shell(config, term_info);
+ * shell.run();  // Start REPL
+ * ```
+ */
 class Shell
 {
 public:
+    /**
+     * @brief Construct shell with configuration and terminal info
+     * @param config Shell configuration (prompt, history, mounts, etc.)
+     * @param terminal_info Detected terminal capabilities (colors, UTF-8, etc.)
+     */
     Shell(const Config& config, const TerminalInfo& terminal_info)
         : config_(config)
         , terminal_info_(terminal_info)
@@ -44,6 +95,14 @@ public:
         loadHistory();
     }
 
+    /**
+     * @brief Destructor - cleanup resources
+     *
+     * Performs cleanup:
+     * - Saves command history to disk
+     * - Restores default signal handlers
+     * - Allows VirtualFilesystem cleanup
+     */
     ~Shell()
     {
         // Save history before exiting
@@ -53,6 +112,18 @@ public:
         std::signal(SIGINT, SIG_DFL);
     }
 
+    /**
+     * @brief Start the interactive REPL loop
+     *
+     * Main shell loop that:
+     * - Displays welcome message (MOTD)
+     * - Shows prompt and waits for input
+     * - Executes commands
+     * - Handles EOF (Ctrl+D) and exit command
+     * - Continues until user exits
+     *
+     * @note This function blocks until the shell exits
+     */
     void run()
     {
         printWelcome();
@@ -101,14 +172,42 @@ public:
         }
     }
 
+    /**
+     * @brief Execute a command line string
+     * @param command_line Full command line to execute
+     * @return Status indicating success, failure, or exit
+     *
+     * @details Parses and executes a command line, handling:
+     *          - Command tokenization
+     *          - Output redirection detection
+     *          - Executable file execution
+     *          - Built-in command dispatch
+     *
+     *          This is a convenience method that wraps executeCommand()
+     *          and is useful for programmatic command execution.
+     */
     Status executeCommandLine(const std::string& command_line)
     {
         return executeCommand(command_line);
     }
 
+    /**
+     * @brief Global shell instance for signal handling
+     *
+     * Static pointer to current shell instance, used by the signal
+     * handler to access the shell's interrupt handling methods.
+     */
     static Shell* instance_;
 
 private:
+    /**
+     * @brief Static signal handler for SIGINT (Ctrl+C)
+     * @param signal Signal number (SIGINT)
+     *
+     * @details Called by the OS when user presses Ctrl+C.
+     *          Forwards the interrupt to the current shell instance
+     *          via handleInterrupt().
+     */
     static void signalHandler(int signal)
     {
         if (signal == SIGINT && instance_)
@@ -117,6 +216,15 @@ private:
         }
     }
 
+    /**
+     * @brief Handle interrupt signal (Ctrl+C)
+     *
+     * @details Processes SIGINT by:
+     *          - Setting interrupt flag
+     *          - Cancelling current async command (if any)
+     *          - Printing cancellation message
+     *          - Resetting interrupt flag after handling
+     */
     void handleInterrupt()
     {
         interrupt_received_.store(true);
@@ -141,12 +249,24 @@ private:
         }
     }
 
+    /**
+     * @brief Setup signal handler for interrupts
+     *
+     * Registers the static signalHandler() for SIGINT (Ctrl+C) events.
+     * Sets the global instance pointer for signal handler access.
+     */
     void setupSignalHandler()
     {
         instance_ = this;
         std::signal(SIGINT, signalHandler);
     }
 
+    /**
+     * @brief Load command history from disk
+     *
+     * Reads the history file (if it exists) and populates the
+     * replxx history. Silently continues if file doesn't exist.
+     */
     void loadHistory()
     {
         if (history_file_.empty())
@@ -171,6 +291,12 @@ private:
         }
     }
 
+    /**
+     * @brief Save command history to disk
+     *
+     * Writes the current replxx history to the history file.
+     * Creates the file if it doesn't exist, truncates if it does.
+     */
     void saveHistory()
     {
         if (history_file_.empty())
@@ -374,6 +500,27 @@ private:
         }
     }
 
+    /**
+     * @brief Execute a command line
+     * @param line Full command line to execute (may include redirection)
+     * @return Status indicating success, failure, or exit
+     *
+     * @details Main command execution flow:
+     *          1. Parse output redirection (>, >>)
+     *          2. Tokenize command into name and arguments
+     *          3. Check for executable file (./ or containing /)
+     *          4. Look up command in registry
+     *          5. Setup output redirection if needed
+     *          6. Execute command (sync or async)
+     *          7. Restore output streams
+     *          8. Return result status
+     *
+     *          This method handles:
+     *          - Built-in commands (ls, cd, etc.)
+     *          - Executable files (./script.sh)
+     *          - Output redirection (command > file)
+     *          - Color stripping for redirected output
+     */
     Status executeCommand(const std::string& line)
     {
         // Parse for output redirection
@@ -432,6 +579,22 @@ private:
         return result;
     }
 
+    /**
+     * @brief Execute an external executable file
+     * @param path Path to executable file
+     * @param args Command-line arguments to pass to executable
+     * @return Status indicating success or failure
+     *
+     * @details Executes external scripts and binaries by:
+     *          1. Checking file exists and has execute permission
+     *          2. Forking a child process
+     *          3. Executing the file with execv()
+     *          4. Waiting for child completion
+     *          5. Returning child exit status
+     *
+     *          Supports both shebang scripts (#!/bin/bash) and native binaries.
+     *          The parent process waits synchronously for child completion.
+     */
     Status executeExecutableFile(const std::string& path, const std::vector<std::string>& args)
     {
         // Check if file exists and is executable
@@ -495,6 +658,22 @@ private:
         }
     }
 
+    /**
+     * @brief Execute command asynchronously
+     * @param command Command to execute
+     * @param context Command execution context
+     * @return Status from command execution
+     *
+     * @details Runs command in a background thread using std::async.
+     *          This enables:
+     *          - Non-blocking command execution
+     *          - Interrupt handling during execution
+     *          - Cancellation support (Ctrl+C)
+     *
+     *          The method waits for completion but allows signal
+     *          handling during execution. The current_command_ pointer
+     *          is set to enable cancellation via handleInterrupt().
+     */
     Status executeAsync(std::shared_ptr<ICommand> command, const CommandContext& context)
     {
         // Store current command for cancellation
@@ -514,6 +693,17 @@ private:
         return result;
     }
 
+    /**
+     * @brief Tokenize command line into words
+     * @param line Command line string
+     * @return Vector of tokens (command name and arguments)
+     *
+     * @details Simple whitespace-based tokenization.
+     *          Does not handle:
+     *          - Quoted strings with spaces
+     *          - Escape sequences
+     *          - Environment variable expansion
+     */
     std::vector<std::string> tokenize(const std::string& line)
     {
         std::vector<std::string> tokens;

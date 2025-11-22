@@ -14,18 +14,63 @@
 namespace homeshell
 {
 
+/**
+ * @brief USB device information
+ *
+ * Contains all relevant information about a USB device detected on the system.
+ */
 struct UsbDevice
 {
-    std::string bus;
-    std::string device;
-    std::string vendor_id;
-    std::string product_id;
-    std::string vendor_name;
-    std::string product_name;
-    std::string speed;
+    std::string bus;          ///< USB bus number
+    std::string device;       ///< Device number on bus
+    std::string vendor_id;    ///< Vendor ID (hex)
+    std::string product_id;   ///< Product ID (hex)
+    std::string vendor_name;  ///< Human-readable vendor name
+    std::string product_name; ///< Human-readable product name
+    std::string speed;        ///< Connection speed (e.g., "480M", "5000M")
 };
 
-class LsusbCommand : public ICommand
+/**
+ * @brief List USB devices
+ *
+ * Displays information about USB buses and connected devices by reading
+ * from /sys/bus/usb/devices on Linux systems.
+ *
+ * @details The lsusb command provides:
+ *          - USB bus and device numbers
+ *          - Vendor and product IDs (hex format)
+ *          - Device names (vendor and product)
+ *          - Connection speed
+ *          - Color-coded output for better readability
+ *
+ *          Command syntax:
+ *          ```
+ *          lsusb
+ *          ```
+ *
+ *          Output format:
+ *          ```
+ *          Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+ *          Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+ *          Bus 002 Device 003: ID 046d:c52b Logitech, Inc. Unifying Receiver
+ *          ```
+ *
+ *          Information is gathered from:
+ *          - /sys/bus/usb/devices/*/
+    busnum * - / sys / bus / usb /
+    devices /*/devnum
+             *          - /sys/bus/usb/devices/*/
+        idVendor *
+    - / sys / bus / usb /
+    devices /*/idProduct
+             *          - /sys/bus/usb/devices/*/
+        manufacturer *
+    - / sys / bus / usb /
+    devices /*/product
+             *          - /sys/bus/usb/devices/*/
+        speed** Example usage
+    : * ``` * lsusb #List all USB devices* ``` ** @note Linux only.On other platforms
+    , reports "not supported".* / class LsusbCommand : public ICommand
 {
 public:
     std::string getName() const override
@@ -43,6 +88,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the lsusb command
+     * @param context Command context (no arguments used)
+     * @return Status::ok() on success, Status::error() if not supported
+     */
     Status execute(const CommandContext& context) override
     {
 #ifdef __linux__

@@ -18,6 +18,53 @@
 namespace homeshell
 {
 
+/**
+ * @brief Full-screen text editor command
+ *
+ * Provides a nano-style text editor with full-screen terminal interface using ncurses.
+ * Supports editing both regular files and files within encrypted virtual mounts.
+ *
+ * @details Features:
+ *          - Full-screen interface with title bar and status bar
+ *          - Arrow key navigation and Page Up/Down
+ *          - Text insertion and deletion
+ *          - Line operations (cut/paste)
+ *          - Save confirmation for unsaved changes
+ *
+ *          Keyboard shortcuts:
+ *          - Ctrl+X: Exit (prompts to save if modified)
+ *          - Ctrl+O: Save file
+ *          - Ctrl+K: Cut current line to clipboard
+ *          - Ctrl+U: Paste line from clipboard
+ *          - Ctrl+A: Jump to line start
+ *          - Ctrl+E: Jump to line end
+ *          - Arrow keys: Navigate cursor
+ *          - Page Up/Down: Scroll by screen
+ *          - Backspace: Delete character before cursor
+ *          - Enter: Insert new line
+ *
+ *          Interface layout:
+ *          ```
+ *          ┌─────────────────────────────────┐
+ *          │ Homeshell Editor               │  <- Title bar
+ *          ├─────────────────────────────────┤
+ *          │ File content here...           │
+ *          │                                 │  <- Text area
+ *          │                                 │
+ *          ├─────────────────────────────────┤
+ *          │ filename.txt [Modified]         │  <- Status bar
+ *          │ ^X Exit  ^O Save  ^K Cut  ^U... │  <- Help line
+ *          └─────────────────────────────────┘
+ *          ```
+ *
+ *          The editor works transparently with both regular files and
+ *          encrypted virtual filesystem files.
+ *
+ * @note Only available on Unix-like systems (requires ncurses).
+ *       On other platforms, this command will report an error.
+ *
+ * Example: edit /secure/notes.txt
+ */
 class EditCommand : public ICommand
 {
 public:
@@ -36,6 +83,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the edit command
+     * @param context Command context with filename argument
+     * @return Status indicating success/failure
+     */
     Status execute(const CommandContext& context) override
     {
 #ifdef __unix__

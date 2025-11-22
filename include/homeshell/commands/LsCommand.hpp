@@ -10,6 +10,56 @@
 namespace homeshell
 {
 
+/**
+ * @brief List directory contents
+ *
+ * Displays files and directories in a specified path, with support for
+ * detailed listings and human-readable sizes. Works transparently with
+ * both regular filesystem and encrypted virtual mounts.
+ *
+ * @details Features:
+ *          - Simple listing (names only)
+ *          - Detailed listing with permissions, size, and timestamps (-l)
+ *          - Human-readable file sizes (-h with -l)
+ *          - Color-coded output (blue for directories, cyan for symlinks)
+ *          - Unified view of regular and virtual filesystems
+ *
+ *          Command syntax:
+ *          ```
+ *          ls [OPTIONS] [PATH]
+ *          ```
+ *
+ *          Options:
+ *          - `-l, --long`: Show detailed listing with permissions, size, mtime
+ *          - `-h`: Human-readable sizes (KB, MB, GB) - requires -l
+ *          - `--help`: Show help message
+ *
+ *          Output format (simple):
+ *          ```
+ *          file1.txt  dir1/  file2.txt
+ *          ```
+ *
+ *          Output format (detailed -l):
+ *          ```
+ *          -rw-r--r--  1024  2024-11-22 15:30  file1.txt
+ *          drwxr-xr-x  4096  2024-11-22 14:20  dir1/
+ *          ```
+ *
+ *          Output format (detailed -lh):
+ *          ```
+ *          -rw-r--r--  1.0K  2024-11-22 15:30  file1.txt
+ *          drwxr-xr-x  4.0K  2024-11-22 14:20  dir1/
+ *          ```
+ *
+ * Example usage:
+ * ```
+ * ls                    # List current directory
+ * ls /home              # List /home directory
+ * ls -l                 # Detailed listing
+ * ls -lh /var/log       # Human-readable sizes
+ * ls /secure            # List encrypted mount
+ * ```
+ */
 class LsCommand : public ICommand
 {
 public:
@@ -28,6 +78,11 @@ public:
         return CommandType::Synchronous;
     }
 
+    /**
+     * @brief Execute the ls command
+     * @param context Command context with optional path and flags
+     * @return Status indicating success or failure
+     */
     Status execute(const CommandContext& context) override
     {
         std::string path = ".";

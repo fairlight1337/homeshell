@@ -8,23 +8,65 @@
 namespace homeshell
 {
 
+/**
+ * @brief Configuration for an encrypted mount
+ *
+ * Defines the parameters for an encrypted virtual filesystem mount.
+ * Used when loading mount configurations from JSON config files.
+ */
 struct MountConfig
 {
-    std::string name;
-    std::string db_path;
-    std::string mount_point;
-    std::string password;
-    int64_t max_size_mb = 100; // Default 100MB
-    bool auto_mount = true;
+    std::string name;          ///< Unique mount identifier
+    std::string db_path;       ///< Path to SQLCipher database file
+    std::string mount_point;   ///< Virtual mount point (e.g., "/secure")
+    std::string password;      ///< Mount password (optional, will prompt if empty)
+    int64_t max_size_mb = 100; ///< Maximum storage size in megabytes
+    bool auto_mount = true;    ///< Whether to mount automatically on shell startup
 };
 
+/**
+ * @brief Shell configuration
+ *
+ * Contains all configuration options for the shell, including prompt format,
+ * history file location, MOTD, and encrypted mount definitions.
+ *
+ * @details Configuration can be loaded from a JSON file or use sensible defaults.
+ *
+ *          JSON format example:
+ *          ```json
+ *          {
+ *            "prompt_format": "homeshell> ",
+ *            "history_file": "~/.homeshell_history",
+ *            "motd": "Welcome to Homeshell!",
+ *            "encrypted_mounts": [
+ *              {
+ *                "name": "secure",
+ *                "db_path": "~/secure.db",
+ *                "mount_point": "/secure",
+ *                "password": "",
+ *                "max_size_mb": 100,
+ *                "auto_mount": true
+ *              }
+ *            ]
+ *          }
+ *          ```
+ *
+ *          Paths support tilde expansion (~/ for home directory).
+ */
 struct Config
 {
-    std::string prompt_format = "$ ";
-    std::string history_file = "~/.homeshell_history";
-    std::string motd = "Welcome to Homeshell!\nType 'help' for available commands.";
-    std::vector<MountConfig> encrypted_mounts;
+    std::string prompt_format = "$ ";                  ///< Shell prompt format string
+    std::string history_file = "~/.homeshell_history"; ///< Path to history file
+    std::string motd =
+        "Welcome to Homeshell!\nType 'help' for available commands."; ///< Message of the day
+    std::vector<MountConfig> encrypted_mounts; ///< Encrypted mount configurations
 
+    /**
+     * @brief Load configuration from JSON file
+     * @param filepath Path to configuration file
+     * @return Parsed configuration
+     * @throws std::runtime_error if file cannot be opened or parsed
+     */
     static Config loadFromFile(const std::string& filepath)
     {
         Config config;
@@ -90,11 +132,23 @@ struct Config
         return config;
     }
 
+    /**
+     * @brief Load default configuration
+     * @return Configuration with default values
+     */
     static Config loadDefault()
     {
         return Config{};
     }
 
+    /**
+     * @brief Expand tilde (~) in file paths to home directory
+     * @param path Path that may contain ~ prefix
+     * @return Expanded path with home directory substituted
+     *
+     * @details Supports both Unix ($HOME) and Windows (%USERPROFILE%) environments.
+     *          Paths not starting with ~ are returned unchanged.
+     */
     std::string expandPath(const std::string& path) const
     {
         if (path.empty() || path[0] != '~')
