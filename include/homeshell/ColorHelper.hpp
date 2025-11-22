@@ -2,13 +2,14 @@
 
 #include <fmt/color.h>
 #include <fmt/core.h>
+
 #include <string>
 
 namespace homeshell
 {
 
 // Helper for conditional color formatting
-template<typename... Args>
+template <typename... Args>
 void print_color(bool use_colors, fmt::color color, const std::string& format_str, Args&&... args)
 {
     if (use_colors)
@@ -21,8 +22,9 @@ void print_color(bool use_colors, fmt::color color, const std::string& format_st
     }
 }
 
-template<typename... Args>
-void print_color(bool use_colors, fmt::text_style style, const std::string& format_str, Args&&... args)
+template <typename... Args>
+void print_color(bool use_colors, fmt::text_style style, const std::string& format_str,
+                 Args&&... args)
 {
     if (use_colors)
     {
@@ -35,5 +37,3 @@ void print_color(bool use_colors, fmt::text_style style, const std::string& form
 }
 
 } // namespace homeshell
-
-

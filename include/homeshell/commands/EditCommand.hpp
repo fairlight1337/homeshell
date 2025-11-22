@@ -3,8 +3,10 @@
 #include <homeshell/Command.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/VirtualFilesystem.hpp>
+
 #include <fmt/color.h>
 #include <fmt/core.h>
+
 #include <fstream>
 #include <string>
 #include <vector>
@@ -45,7 +47,7 @@ public:
         }
 
         std::string filename = context.args[0];
-        
+
         // Load file content
         std::vector<std::string> lines;
         if (!loadFile(filename, lines))
@@ -72,23 +74,31 @@ public:
             // Get screen dimensions
             int max_y, max_x;
             getmaxyx(stdscr, max_y, max_x);
-            int text_area_height = max_y - 3; // Leave room for status and help
+            int text_area_height = max_y - 4; // Leave room for title, status and help
 
             // Clear screen
             clear();
 
-            // Draw file contents
-            for (int i = 0; i < text_area_height && (i + scroll_offset) < static_cast<int>(lines.size()); ++i)
+            // Draw title bar
+            attron(A_REVERSE);
+            mvprintw(0, 0, " Homeshell Editor");
+            for (int i = 17; i < max_x; ++i)
+            {
+                mvaddch(0, i, ' ');
+            }
+            attroff(A_REVERSE);
+
+            // Draw file contents (starting at line 1)
+            for (int i = 0;
+                 i < text_area_height && (i + scroll_offset) < static_cast<int>(lines.size()); ++i)
             {
                 int line_idx = i + scroll_offset;
-                mvprintw(i, 0, "%s", lines[line_idx].c_str());
+                mvprintw(i + 1, 0, "%s", lines[line_idx].c_str());
             }
 
             // Draw status bar
             attron(A_REVERSE);
-            mvprintw(max_y - 2, 0, " %s %s ", 
-                    filename.c_str(),
-                    modified ? "[Modified]" : "");
+            mvprintw(max_y - 2, 0, " %s %s ", filename.c_str(), modified ? "[Modified]" : "");
             for (int i = filename.length() + (modified ? 20 : 10); i < max_x; ++i)
             {
                 mvaddch(max_y - 2, i, ' ');
@@ -96,10 +106,10 @@ public:
             attroff(A_REVERSE);
 
             // Draw help line
-            mvprintw(max_y - 1, 0, "^X Exit  ^O Save  ^K Cut Line  ^U Paste Line");
+            mvprintw(max_y - 1, 0, "^A/^E Line Start/End  ^X Exit  ^O Save  ^K Cut  ^U Paste");
 
-            // Position cursor
-            move(cursor_y - scroll_offset, cursor_x);
+            // Position cursor (adjust for title bar at line 0)
+            move(cursor_y - scroll_offset + 1, cursor_x);
             refresh();
 
             // Handle input
@@ -107,186 +117,194 @@ public:
 
             switch (ch)
             {
-                case 24: // Ctrl-X: Exit
-                    if (modified)
+            case 24: // Ctrl-X: Exit
+                if (modified)
+                {
+                    // Ask to save
+                    mvprintw(max_y - 1, 0, "Save modified buffer? (Y/N)");
+                    clrtoeol();
+                    refresh();
+                    int confirm = getch();
+                    if (confirm == 'y' || confirm == 'Y')
                     {
-                        // Ask to save
-                        mvprintw(max_y - 1, 0, "Save modified buffer? (Y/N)");
-                        clrtoeol();
-                        refresh();
-                        int confirm = getch();
-                        if (confirm == 'y' || confirm == 'Y')
-                        {
-                            saveFile(filename, lines);
-                        }
+                        saveFile(filename, lines);
                     }
-                    running = false;
-                    break;
+                }
+                running = false;
+                break;
 
-                case 15: // Ctrl-O: Save
-                    if (saveFile(filename, lines))
-                    {
-                        modified = false;
-                        mvprintw(max_y - 1, 0, "[ Wrote %zu lines ]", lines.size());
-                        clrtoeol();
-                        refresh();
-                        napms(1000); // Brief pause to show message
-                    }
-                    break;
+            case 15: // Ctrl-O: Save
+                if (saveFile(filename, lines))
+                {
+                    modified = false;
+                    mvprintw(max_y - 1, 0, "[ Wrote %zu lines ]", lines.size());
+                    clrtoeol();
+                    refresh();
+                    napms(1000); // Brief pause to show message
+                }
+                break;
 
-                case 11: // Ctrl-K: Cut line
-                    clipboard = lines[cursor_y];
-                    lines.erase(lines.begin() + cursor_y);
-                    if (lines.empty())
-                    {
-                        lines.push_back("");
-                    }
-                    if (cursor_y >= static_cast<int>(lines.size()))
-                    {
-                        cursor_y = lines.size() - 1;
-                    }
-                    cursor_x = std::min(cursor_x, static_cast<int>(lines[cursor_y].length()));
+            case 11: // Ctrl-K: Cut line
+                clipboard = lines[cursor_y];
+                lines.erase(lines.begin() + cursor_y);
+                if (lines.empty())
+                {
+                    lines.push_back("");
+                }
+                if (cursor_y >= static_cast<int>(lines.size()))
+                {
+                    cursor_y = lines.size() - 1;
+                }
+                cursor_x = std::min(cursor_x, static_cast<int>(lines[cursor_y].length()));
+                modified = true;
+                break;
+
+            case 21: // Ctrl-U: Paste line
+                if (!clipboard.empty())
+                {
+                    lines.insert(lines.begin() + cursor_y, clipboard);
                     modified = true;
-                    break;
+                }
+                break;
 
-                case 21: // Ctrl-U: Paste line
-                    if (!clipboard.empty())
-                    {
-                        lines.insert(lines.begin() + cursor_y, clipboard);
-                        modified = true;
-                    }
-                    break;
+            case 1: // Ctrl-A: Go to start of line
+                cursor_x = 0;
+                break;
 
-                case KEY_UP:
-                    if (cursor_y > 0)
-                    {
-                        cursor_y--;
-                        cursor_x = std::min(cursor_x, static_cast<int>(lines[cursor_y].length()));
-                        if (cursor_y < scroll_offset)
-                        {
-                            scroll_offset = cursor_y;
-                        }
-                    }
-                    break;
+            case 5: // Ctrl-E: Go to end of line
+                cursor_x = lines[cursor_y].length();
+                break;
 
-                case KEY_DOWN:
-                    if (cursor_y < static_cast<int>(lines.size()) - 1)
+            case KEY_UP:
+                if (cursor_y > 0)
+                {
+                    cursor_y--;
+                    cursor_x = std::min(cursor_x, static_cast<int>(lines[cursor_y].length()));
+                    if (cursor_y < scroll_offset)
                     {
-                        cursor_y++;
-                        cursor_x = std::min(cursor_x, static_cast<int>(lines[cursor_y].length()));
-                        if (cursor_y >= scroll_offset + text_area_height)
-                        {
-                            scroll_offset = cursor_y - text_area_height + 1;
-                        }
+                        scroll_offset = cursor_y;
                     }
-                    break;
+                }
+                break;
 
-                case KEY_LEFT:
-                    if (cursor_x > 0)
+            case KEY_DOWN:
+                if (cursor_y < static_cast<int>(lines.size()) - 1)
+                {
+                    cursor_y++;
+                    cursor_x = std::min(cursor_x, static_cast<int>(lines[cursor_y].length()));
+                    if (cursor_y >= scroll_offset + text_area_height)
                     {
-                        cursor_x--;
+                        scroll_offset = cursor_y - text_area_height + 1;
                     }
-                    else if (cursor_y > 0)
-                    {
-                        // Move to end of previous line
-                        cursor_y--;
-                        cursor_x = lines[cursor_y].length();
-                        if (cursor_y < scroll_offset)
-                        {
-                            scroll_offset = cursor_y;
-                        }
-                    }
-                    break;
+                }
+                break;
 
-                case KEY_RIGHT:
-                    if (cursor_x < static_cast<int>(lines[cursor_y].length()))
-                    {
-                        cursor_x++;
-                    }
-                    else if (cursor_y < static_cast<int>(lines.size()) - 1)
-                    {
-                        // Move to beginning of next line
-                        cursor_y++;
-                        cursor_x = 0;
-                        if (cursor_y >= scroll_offset + text_area_height)
-                        {
-                            scroll_offset = cursor_y - text_area_height + 1;
-                        }
-                    }
-                    break;
-
-                case KEY_HOME:
-                    cursor_x = 0;
-                    break;
-
-                case KEY_END:
+            case KEY_LEFT:
+                if (cursor_x > 0)
+                {
+                    cursor_x--;
+                }
+                else if (cursor_y > 0)
+                {
+                    // Move to end of previous line
+                    cursor_y--;
                     cursor_x = lines[cursor_y].length();
-                    break;
+                    if (cursor_y < scroll_offset)
+                    {
+                        scroll_offset = cursor_y;
+                    }
+                }
+                break;
 
-                case KEY_BACKSPACE:
-                case 127: // Backspace
-                case 8:
-                    if (cursor_x > 0)
+            case KEY_RIGHT:
+                if (cursor_x < static_cast<int>(lines[cursor_y].length()))
+                {
+                    cursor_x++;
+                }
+                else if (cursor_y < static_cast<int>(lines.size()) - 1)
+                {
+                    // Move to beginning of next line
+                    cursor_y++;
+                    cursor_x = 0;
+                    if (cursor_y >= scroll_offset + text_area_height)
                     {
-                        lines[cursor_y].erase(cursor_x - 1, 1);
-                        cursor_x--;
-                        modified = true;
+                        scroll_offset = cursor_y - text_area_height + 1;
                     }
-                    else if (cursor_y > 0)
-                    {
-                        // Join with previous line
-                        cursor_x = lines[cursor_y - 1].length();
-                        lines[cursor_y - 1] += lines[cursor_y];
-                        lines.erase(lines.begin() + cursor_y);
-                        cursor_y--;
-                        if (cursor_y < scroll_offset)
-                        {
-                            scroll_offset = cursor_y;
-                        }
-                        modified = true;
-                    }
-                    break;
+                }
+                break;
 
-                case KEY_DC: // Delete
-                    if (cursor_x < static_cast<int>(lines[cursor_y].length()))
-                    {
-                        lines[cursor_y].erase(cursor_x, 1);
-                        modified = true;
-                    }
-                    else if (cursor_y < static_cast<int>(lines.size()) - 1)
-                    {
-                        // Join with next line
-                        lines[cursor_y] += lines[cursor_y + 1];
-                        lines.erase(lines.begin() + cursor_y + 1);
-                        modified = true;
-                    }
-                    break;
+            case KEY_HOME:
+                cursor_x = 0;
+                break;
 
-                case 10: // Enter
-                case KEY_ENTER:
-                    {
-                        std::string remaining = lines[cursor_y].substr(cursor_x);
-                        lines[cursor_y] = lines[cursor_y].substr(0, cursor_x);
-                        lines.insert(lines.begin() + cursor_y + 1, remaining);
-                        cursor_y++;
-                        cursor_x = 0;
-                        if (cursor_y >= scroll_offset + text_area_height)
-                        {
-                            scroll_offset = cursor_y - text_area_height + 1;
-                        }
-                        modified = true;
-                    }
-                    break;
+            case KEY_END:
+                cursor_x = lines[cursor_y].length();
+                break;
 
-                default:
-                    // Regular character input
-                    if (ch >= 32 && ch < 127)
+            case KEY_BACKSPACE:
+            case 127: // Backspace
+            case 8:
+                if (cursor_x > 0)
+                {
+                    lines[cursor_y].erase(cursor_x - 1, 1);
+                    cursor_x--;
+                    modified = true;
+                }
+                else if (cursor_y > 0)
+                {
+                    // Join with previous line
+                    cursor_x = lines[cursor_y - 1].length();
+                    lines[cursor_y - 1] += lines[cursor_y];
+                    lines.erase(lines.begin() + cursor_y);
+                    cursor_y--;
+                    if (cursor_y < scroll_offset)
                     {
-                        lines[cursor_y].insert(cursor_x, 1, static_cast<char>(ch));
-                        cursor_x++;
-                        modified = true;
+                        scroll_offset = cursor_y;
                     }
-                    break;
+                    modified = true;
+                }
+                break;
+
+            case KEY_DC: // Delete
+                if (cursor_x < static_cast<int>(lines[cursor_y].length()))
+                {
+                    lines[cursor_y].erase(cursor_x, 1);
+                    modified = true;
+                }
+                else if (cursor_y < static_cast<int>(lines.size()) - 1)
+                {
+                    // Join with next line
+                    lines[cursor_y] += lines[cursor_y + 1];
+                    lines.erase(lines.begin() + cursor_y + 1);
+                    modified = true;
+                }
+                break;
+
+            case 10: // Enter
+            case KEY_ENTER:
+            {
+                std::string remaining = lines[cursor_y].substr(cursor_x);
+                lines[cursor_y] = lines[cursor_y].substr(0, cursor_x);
+                lines.insert(lines.begin() + cursor_y + 1, remaining);
+                cursor_y++;
+                cursor_x = 0;
+                if (cursor_y >= scroll_offset + text_area_height)
+                {
+                    scroll_offset = cursor_y - text_area_height + 1;
+                }
+                modified = true;
+            }
+            break;
+
+            default:
+                // Regular character input
+                if (ch >= 32 && ch < 127)
+                {
+                    lines[cursor_y].insert(cursor_x, 1, static_cast<char>(ch));
+                    cursor_x++;
+                    modified = true;
+                }
+                break;
             }
 
             // Ensure we always have at least one line
@@ -310,7 +328,7 @@ private:
     bool loadFile(const std::string& filename, std::vector<std::string>& lines)
     {
         auto& vfs = VirtualFilesystem::getInstance();
-        
+
         // Try to read from VFS first
         if (vfs.isVirtualPath(filename))
         {
@@ -348,7 +366,7 @@ private:
     bool saveFile(const std::string& filename, const std::vector<std::string>& lines)
     {
         auto& vfs = VirtualFilesystem::getInstance();
-        
+
         // Join lines into content
         std::string content;
         for (size_t i = 0; i < lines.size(); ++i)
@@ -379,4 +397,3 @@ private:
 };
 
 } // namespace homeshell
-

@@ -295,6 +295,8 @@ Tab completion works for:
     - `Ctrl-O` - Save file
     - `Ctrl-K` - Cut current line to clipboard
     - `Ctrl-U` - Paste line from clipboard
+    - `Ctrl-A` - Jump to start of line
+    - `Ctrl-E` - Jump to end of line
     - Arrow keys - Navigate (with auto-scrolling)
     - Home/End - Jump to start/end of line
     - Backspace/Delete - Remove characters
@@ -377,7 +379,7 @@ Tab completion works for:
   - **System Load**: 1, 5, and 15-minute load averages
   - **Graphics**: GPU information, NVIDIA driver version
   - **Disks**: All mounted filesystems with usage and capacity
-  - **Network**: All network interfaces with status and MAC addresses
+  - **Network**: All network interfaces with status, MAC addresses, IPv4/IPv6 addresses and subnet masks (CIDR notation)
   - **Display**: X11 or Wayland display server detection
 - Color-coded status indicators (green/yellow/red based on usage)
 - Example: `sysinfo`

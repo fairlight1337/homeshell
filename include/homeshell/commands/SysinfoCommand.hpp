@@ -15,6 +15,9 @@
 #include <vector>
 
 #ifdef __linux__
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
 #include <sys/statvfs.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
@@ -402,6 +405,76 @@ private:
     {
         printSection("Network");
 
+        struct ifaddrs* ifaddr;
+        if (getifaddrs(&ifaddr) == -1)
+            return;
+
+        std::map<std::string, std::vector<std::string>> interface_ips;
+
+        // Collect all IP addresses for each interface
+        for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next)
+        {
+            if (ifa->ifa_addr == nullptr)
+                continue;
+
+            std::string ifname = ifa->ifa_name;
+
+            // Skip loopback
+            if (ifname == "lo")
+                continue;
+
+            // Handle IPv4
+            if (ifa->ifa_addr->sa_family == AF_INET)
+            {
+                char addr_buf[INET_ADDRSTRLEN];
+                char mask_buf[INET_ADDRSTRLEN];
+
+                struct sockaddr_in* addr = (struct sockaddr_in*)ifa->ifa_addr;
+                struct sockaddr_in* netmask = (struct sockaddr_in*)ifa->ifa_netmask;
+
+                inet_ntop(AF_INET, &addr->sin_addr, addr_buf, INET_ADDRSTRLEN);
+                inet_ntop(AF_INET, &netmask->sin_addr, mask_buf, INET_ADDRSTRLEN);
+
+                // Calculate CIDR prefix length
+                uint32_t mask = ntohl(netmask->sin_addr.s_addr);
+                int prefix = 0;
+                while (mask & (1u << 31))
+                {
+                    prefix++;
+                    mask <<= 1;
+                }
+
+                interface_ips[ifname].push_back(fmt::format("IPv4: {}/{}", addr_buf, prefix));
+            }
+            // Handle IPv6
+            else if (ifa->ifa_addr->sa_family == AF_INET6)
+            {
+                char addr_buf[INET6_ADDRSTRLEN];
+                struct sockaddr_in6* addr = (struct sockaddr_in6*)ifa->ifa_addr;
+                struct sockaddr_in6* netmask = (struct sockaddr_in6*)ifa->ifa_netmask;
+
+                inet_ntop(AF_INET6, &addr->sin6_addr, addr_buf, INET6_ADDRSTRLEN);
+
+                // Calculate IPv6 prefix length
+                int prefix = 0;
+                uint8_t* mask_bytes = (uint8_t*)&netmask->sin6_addr;
+                for (int i = 0; i < 16; i++)
+                {
+                    uint8_t byte = mask_bytes[i];
+                    while (byte & 0x80)
+                    {
+                        prefix++;
+                        byte <<= 1;
+                    }
+                }
+
+                interface_ips[ifname].push_back(fmt::format("IPv6: {}/{}", addr_buf, prefix));
+            }
+        }
+
+        freeifaddrs(ifaddr);
+
+        // Now display interfaces with their IPs
         std::error_code ec;
         if (!std::filesystem::exists("/sys/class/net", ec))
             return;
@@ -415,17 +488,33 @@ private:
                 continue;
 
             std::string operstate = readSysFile(entry.path().string() + "/operstate");
-            std::string address = readSysFile(entry.path().string() + "/address");
+            std::string mac_address = readSysFile(entry.path().string() + "/address");
 
-            std::string status = operstate;
             auto color = (operstate == "up") ? fmt::color::green : fmt::color::red;
 
-            if (!address.empty())
+            std::string status = operstate;
+            if (!mac_address.empty())
             {
-                status += " (" + address + ")";
+                status += " (MAC: " + mac_address + ")";
             }
 
             printField(interface, status, color);
+
+            // Print IP addresses with indentation
+            if (interface_ips.find(interface) != interface_ips.end())
+            {
+                for (const auto& ip_info : interface_ips[interface])
+                {
+                    if (use_colors_)
+                    {
+                        fmt::print("    {}\n", ip_info);
+                    }
+                    else
+                    {
+                        fmt::print("    {}\n", ip_info);
+                    }
+                }
+            }
         }
     }
 
