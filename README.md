@@ -50,6 +50,17 @@ A modern, interactive C++20 shell with advanced features including line editing,
 - **Flexible Routing** - Redirect stdout, stderr, or both
 - **Virtual Filesystem** - Works with encrypted mounts and regular files
 
+### 📦 Static Linking
+- **Minimal Dependencies** - Most libraries statically linked into the binary
+- **Portable Binary** - Only requires glibc and libm (standard on all Linux systems)
+- **Statically Linked:**
+  - C++ standard library (libstdc++)
+  - GCC runtime (libgcc)
+  - Terminal UI (libncurses, libtinfo)
+  - All third-party libraries (fmt, replxx, sqlcipher, miniz)
+- **Dynamic Only:** Core system libraries (libc, libm, linux-vdso)
+- **Binary Size:** ~12MB with all features included
+
 ## Quick Start
 
 ### Clone & Build
@@ -72,11 +83,36 @@ cd ../..
 mkdir build
 cd build
 cmake ..
-make
+make -j$(nproc)
 
 # Format code (optional)
 make format
 ```
+
+### Build Options
+
+The build system supports several configuration options:
+
+```bash
+# Static linking (enabled by default)
+cmake -DSTATIC_LINKING=ON ..
+
+# Disable static linking for faster builds during development
+cmake -DSTATIC_LINKING=OFF ..
+
+# Disable tests
+cmake -DBUILD_TESTING=OFF ..
+
+# Check binary dependencies after building
+ldd ./homeshell-linux
+```
+
+**Static Linking Details:**
+- **Enabled by default** - The binary is built with maximum static linking
+- **Minimal runtime dependencies** - Only requires `libc.so.6` and `libm.so.6`
+- **Improved portability** - Binary works across different Linux distributions
+- **No version conflicts** - Embedded libraries won't conflict with system versions
+- **Larger binary size** - Trade-off for reduced dependencies (~12MB vs ~2MB)
 
 ### Setup for Ping Command (Optional)
 
@@ -846,6 +882,42 @@ All dependencies are managed as git submodules:
 - **[Google Test](https://github.com/google/googletest)** - Unit testing framework
 
 **Note on miniz**: The miniz library is built directly from its source files without modifying the submodule. A compatibility header (`include/miniz_compat/miniz_export.h`) is provided to satisfy miniz's build requirements while keeping the submodule clean and reproducible.
+
+### Build Artifacts
+
+The build produces several artifacts:
+
+- **`homeshell-linux`** - Main executable (statically linked, ~12MB)
+- **`libhomeshell.a`** - Core library (can be used in other projects)
+- **`homeshell_tests`** - Test executable (151 comprehensive tests)
+
+### Deployment
+
+Thanks to static linking, deploying Homeshell is straightforward:
+
+```bash
+# Simply copy the binary to your target system
+scp build/homeshell-linux user@remote:/usr/local/bin/
+
+# Or create a minimal package
+tar czf homeshell-1.0.0.tar.gz homeshell-linux config/homeshell.json
+
+# Verify it works on the target system (no library installation needed)
+./homeshell-linux --version
+./homeshell-linux --help
+```
+
+**Requirements on target system:**
+- Linux kernel 3.2+ (for basic syscalls)
+- glibc 2.17+ or compatible (libc.so.6, libm.so.6)
+- No other dependencies required
+
+**Advantages:**
+- ✅ No dependency installation needed
+- ✅ Works across different Linux distributions (Ubuntu, Debian, RHEL, Arch, etc.)
+- ✅ No library version conflicts
+- ✅ Single file deployment
+- ✅ Consistent behavior across environments
 
 ## Development
 

@@ -8,6 +8,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Enable static linking where possible
+option(STATIC_LINKING "Enable static linking" ON)
+
+if(STATIC_LINKING)
+    # Static linking flags
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    
+    # Prefer static libraries
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    
+    message(STATUS "Static linking enabled: libstdc++ and libgcc will be statically linked")
+endif()
+
 # Export compile commands for clang-tidy
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -21,20 +34,23 @@ configure_file(
     @ONLY
 )
 
-# Add CLI11 for command-line argument parsing
+# Force all libraries to be built as static
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+
+# Add CLI11 for command-line argument parsing (header-only)
 add_subdirectory(external/CLI11)
 
-# Add nlohmann/json for JSON parsing
+# Add nlohmann/json for JSON parsing (header-only)
 add_subdirectory(external/json)
 
 # Add fmt for modern formatting with color support
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/fmt)
 
 # Add replxx for interactive line editing
 add_subdirectory(external/replxx)
 
 # Add SQLCipher for encrypted storage
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/sqlcipher)
 
 # Add miniz for zip/unzip functionality
@@ -97,6 +113,38 @@ target_link_libraries(homeshell
 # Find ncurses for the editor
 find_package(Curses REQUIRED)
 
+# Try to find static ncurses library if static linking is enabled
+if(STATIC_LINKING)
+    # Look for static ncurses library
+    find_library(NCURSES_STATIC_LIBRARY
+        NAMES libncurses.a
+        PATHS /usr/lib /usr/lib64 /usr/lib/x86_64-linux-gnu
+        NO_DEFAULT_PATH
+    )
+    
+    # Look for static tinfo library (required by static ncurses)
+    find_library(TINFO_STATIC_LIBRARY
+        NAMES libtinfo.a
+        PATHS /usr/lib /usr/lib64 /usr/lib/x86_64-linux-gnu
+        NO_DEFAULT_PATH
+    )
+    
+    if(NCURSES_STATIC_LIBRARY AND TINFO_STATIC_LIBRARY)
+        set(NCURSES_LINK_LIBRARIES ${NCURSES_STATIC_LIBRARY} ${TINFO_STATIC_LIBRARY})
+        message(STATUS "Using static ncurses: ${NCURSES_STATIC_LIBRARY}")
+        message(STATUS "Using static tinfo: ${TINFO_STATIC_LIBRARY}")
+    elseif(NCURSES_STATIC_LIBRARY)
+        # Try without tinfo (some systems don't separate them)
+        set(NCURSES_LINK_LIBRARIES ${NCURSES_STATIC_LIBRARY})
+        message(STATUS "Using static ncurses: ${NCURSES_STATIC_LIBRARY}")
+    else()
+        set(NCURSES_LINK_LIBRARIES ${CURSES_LIBRARIES})
+        message(STATUS "Static ncurses not found, using dynamic: ${CURSES_LIBRARIES}")
+    endif()
+else()
+    set(NCURSES_LINK_LIBRARIES ${CURSES_LIBRARIES})
+endif()
+
 target_link_libraries(homeshell-linux
     PRIVATE
         homeshell
@@ -105,7 +153,7 @@ target_link_libraries(homeshell-linux
         fmt::fmt
         replxx
         miniz
-        ${CURSES_LIBRARIES}
+        ${NCURSES_LINK_LIBRARIES}
 )
 
 target_include_directories(homeshell-linux
