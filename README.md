@@ -274,6 +274,7 @@ Tab completion works for:
 | `rm` | Remove files or directories | Sync |
 | `file` | Determine file type (magic detection) | Sync |
 | `tree` | Display directory tree structure | Sync |
+| `find` | Search for files and directories | Sync |
 | `edit` | Edit a file (nano-style editor) | Sync |
 | `zip` | Create zip archives | Sync |
 | `unzip` | Extract zip archives | Sync |
@@ -349,6 +350,27 @@ Tab completion works for:
 - Recursively displays all subdirectories and files
 - Displays summary with total directory and file count
 - Example: `tree` or `tree /secure`
+
+**`find [path] [options]`**
+- Search for files and directories recursively
+- Supports pattern matching with wildcards (`*` and `?`)
+- Options:
+  - `-name <pattern>` - Search for files matching pattern (case-sensitive)
+  - `-iname <pattern>` - Case-insensitive name search
+  - `-type <f|d>` - Filter by type: `f`=file, `d`=directory
+  - `-maxdepth <n>` - Limit search depth (0=current dir only, 1=current + children, etc.)
+  - `--help` - Show detailed help message
+- Examples:
+  - `find` - List all files recursively from current directory
+  - `find /tmp` - List all files in /tmp
+  - `find . -name test.txt` - Find files named exactly "test.txt"
+  - `find . -iname readme.md` - Case-insensitive search for readme.md
+  - `find . -type d` - Find all directories
+  - `find . -type f` - Find all files (not directories)
+  - `find /home -maxdepth 2` - Search up to 2 levels deep
+  - `find . -name data.json -type f` - Combine multiple criteria
+- **Note**: Pattern matching works with literal names in the current implementation
+- Color-coded output: directories in blue, files in default color
 
 **`edit <filename>`**
 - Interactive text editor with nano-style interface

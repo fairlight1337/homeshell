@@ -139,6 +139,7 @@ add_library(homeshell
     src/commands/PythonCommand.cpp
     src/commands/ChmodCommand.cpp
     src/commands/VersionCommand.cpp
+    src/commands/FindCommand.cpp
 )
 
 target_include_directories(homeshell
