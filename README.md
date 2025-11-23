@@ -11,7 +11,7 @@
 
 Homeshell is a modern, standalone shell designed to be carried with you—on a USB drive, portable SSD, or any removable media. Built with C++20, it's a fully self-contained environment that runs anywhere without installation or dependencies.
 
-📚 [**Wiki Documentation**](https://github.com/fairlight1337/homeshell/wiki) | 🚀 [Usage Examples](https://github.com/fairlight1337/homeshell/wiki/Usage-Examples) | 📦 [Command Reference](https://github.com/fairlight1337/homeshell/wiki/Command-Reference) | 💾 [Download](https://github.com/fairlight1337/homeshell/releases)
+📚 [**Wiki Documentation**](https://github.com/fairlight1337/homeshell/wiki) | 🚀 [Usage Examples](https://github.com/fairlight1337/homeshell/wiki/Usage-Examples) | 📦 [Command Reference](https://github.com/fairlight1337/homeshell/wiki/Command-Reference) | 📊 [Binary Stats](https://fairlight1337.github.io/homeshell/stats/) | 💾 [Download](https://github.com/fairlight1337/homeshell/releases)
 
 ## Philosophy
 
@@ -81,7 +81,7 @@ cp build/homeshell-linux /media/usb/homeshell
 /media/usb/homeshell --config /media/usb/config.json
 ```
 
-The ~12MB statically-linked binary includes everything: Python interpreter, encryption support, text editor, and all libraries. No installation needed on target systems.
+The statically-linked binary ([see size statistics](https://fairlight1337.github.io/homeshell/stats/)) includes everything: Python interpreter, encryption support, text editor, and all libraries. No installation needed on target systems.
 
 📖 **Full portable setup guide:** [Portable Usage](https://github.com/fairlight1337/homeshell/wiki/Portable-Usage)
 
@@ -164,7 +164,7 @@ zipinfo backup.zip
 
 Homeshell provides a rich set of built-in commands organized by category:
 
-**Filesystem:** `cd`, `pwd`, `ls`, `mkdir`, `rm`, `touch`, `cat`, `cp`, `mv`, `chmod`, `tree`, `find`, `locate`, `updatedb`
+**Filesystem:** `cd`, `pwd`, `ls`, `mkdir`, `rm`, `touch`, `cat`, `grep`, `tail`, `less`, `cp`, `mv`, `chmod`, `tree`, `find`, `locate`, `updatedb`
 
 **Archives:** `zip`, `unzip`, `zipinfo`
 
@@ -318,6 +318,7 @@ See [LICENSE](LICENSE) file for full license text.
 - 📚 [**Wiki Documentation**](https://github.com/fairlight1337/homeshell/wiki) - Comprehensive guides and tutorials
 - 🔧 [**API Documentation**](https://fairlight1337.github.io/homeshell/docs/) - Doxygen-generated API reference
 - 📊 [**Coverage Report**](https://fairlight1337.github.io/homeshell/coverage/) - Code coverage analysis
+- 📏 [**Binary Statistics**](https://fairlight1337.github.io/homeshell/stats/) - Build size, dependencies, and symbol analysis
 - 💬 [**Discussions**](https://github.com/fairlight1337/homeshell/discussions) - Ask questions and share ideas
 - 🐛 [**Issues**](https://github.com/fairlight1337/homeshell/issues) - Report bugs or request features
 - 💾 [**Releases**](https://github.com/fairlight1337/homeshell/releases) - Download pre-built binaries

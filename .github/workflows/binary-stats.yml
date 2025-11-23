@@ -1,0 +1,450 @@
+name: Binary Statistics
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  generate-stats:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libssl-dev \
+            libreadline-dev \
+            libncurses5-dev \
+            binutils \
+            elfutils
+
+      - name: Build SQLCipher
+        run: |
+          cd external/sqlcipher
+          ./configure CFLAGS="-DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=2" LDFLAGS="-lcrypto"
+          make sqlite3.h
+          echo "#define _GNU_SOURCE" > sqlite3_wrapper.c
+          echo "#include <stdint.h>" >> sqlite3_wrapper.c
+          echo "#include \"sqlite3.c\"" >> sqlite3_wrapper.c
+
+      - name: Build MicroPython
+        run: |
+          cd external
+          make -f micropython_build.mk
+
+      - name: Configure CMake (Debug)
+        run: |
+          mkdir -p build-debug
+          cd build-debug
+          cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+      - name: Build Debug
+        run: |
+          cd build-debug
+          make -j$(nproc) homeshell-linux
+
+      - name: Configure CMake (Release)
+        run: |
+          mkdir -p build-release
+          cd build-release
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+
+      - name: Build Release
+        run: |
+          cd build-release
+          make -j$(nproc) homeshell-linux
+
+      - name: Generate Binary Statistics
+        run: |
+          mkdir -p stats
+          
+          # Get file sizes
+          DEBUG_SIZE=$(stat -c%s build-debug/homeshell-linux)
+          RELEASE_SIZE=$(stat -c%s build-release/homeshell-linux)
+          DEBUG_SIZE_MB=$(echo "scale=2; $DEBUG_SIZE / 1048576" | bc)
+          RELEASE_SIZE_MB=$(echo "scale=2; $RELEASE_SIZE / 1048576" | bc)
+          
+          # Strip and get stripped sizes
+          cp build-release/homeshell-linux build-release/homeshell-linux-stripped
+          strip build-release/homeshell-linux-stripped
+          STRIPPED_SIZE=$(stat -c%s build-release/homeshell-linux-stripped)
+          STRIPPED_SIZE_MB=$(echo "scale=2; $STRIPPED_SIZE / 1048576" | bc)
+          
+          # Get symbol counts
+          DEBUG_SYMBOLS=$(nm -C build-debug/homeshell-linux | wc -l)
+          RELEASE_SYMBOLS=$(nm -C build-release/homeshell-linux | wc -l)
+          
+          # Get dynamic linkage info
+          echo "=== Dynamic Library Dependencies ===" > stats/ldd.txt
+          ldd build-release/homeshell-linux >> stats/ldd.txt || echo "Static binary (no dynamic dependencies)" >> stats/ldd.txt
+          
+          # Get detailed ELF info
+          echo "=== ELF Header Information ===" > stats/readelf.txt
+          readelf -h build-release/homeshell-linux >> stats/readelf.txt
+          echo -e "\n=== Section Headers ===" >> stats/readelf.txt
+          readelf -S build-release/homeshell-linux >> stats/readelf.txt
+          echo -e "\n=== Program Headers ===" >> stats/readelf.txt
+          readelf -l build-release/homeshell-linux >> stats/readelf.txt
+          
+          # Get section sizes
+          echo "=== Section Sizes ===" > stats/sections.txt
+          size build-release/homeshell-linux >> stats/sections.txt
+          echo -e "\nDetailed Section Breakdown:" >> stats/sections.txt
+          objdump -h build-release/homeshell-linux | grep -E '^\s+[0-9]+ \.' >> stats/sections.txt
+          
+          # Get top symbols by size
+          echo "=== Top 50 Symbols by Size ===" > stats/top-symbols.txt
+          nm -C -S --size-sort build-release/homeshell-linux | tail -n 50 | tac >> stats/top-symbols.txt
+          
+          # Get library composition breakdown
+          echo "=== Object File Composition ===" > stats/composition.txt
+          echo "Analyzing symbol origins..." >> stats/composition.txt
+          
+          # Count symbols by namespace/library
+          nm -C build-release/homeshell-linux | grep -E ' [TtWw] ' | sed 's/.*\s\w\s//' | cut -d'(' -f1 | cut -d':' -f1 | cut -d'<' -f1 | sort | uniq -c | sort -rn | head -n 30 >> stats/composition.txt
+          
+          # Get build timestamp
+          BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          COMMIT_DATE=$(git log -1 --format=%cd --date=iso)
+          
+          # Generate HTML report
+          cat > stats/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Homeshell Binary Statistics</title>
+              <style>
+                  * {
+                      margin: 0;
+                      padding: 0;
+                      box-sizing: border-box;
+                  }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                      line-height: 1.6;
+                      color: #333;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      padding: 20px;
+                      min-height: 100vh;
+                  }
+                  .container {
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      background: white;
+                      border-radius: 10px;
+                      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                      overflow: hidden;
+                  }
+                  header {
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      padding: 40px;
+                      text-align: center;
+                  }
+                  header h1 {
+                      font-size: 2.5em;
+                      margin-bottom: 10px;
+                  }
+                  header p {
+                      font-size: 1.1em;
+                      opacity: 0.9;
+                  }
+                  .stats-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                      gap: 20px;
+                      padding: 40px;
+                  }
+                  .stat-card {
+                      background: #f8f9fa;
+                      border-radius: 10px;
+                      padding: 25px;
+                      text-align: center;
+                      border: 2px solid #e9ecef;
+                      transition: transform 0.2s, box-shadow 0.2s;
+                  }
+                  .stat-card:hover {
+                      transform: translateY(-5px);
+                      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                  }
+                  .stat-card h3 {
+                      color: #667eea;
+                      font-size: 1.1em;
+                      margin-bottom: 15px;
+                      text-transform: uppercase;
+                      letter-spacing: 1px;
+                  }
+                  .stat-value {
+                      font-size: 2.5em;
+                      font-weight: bold;
+                      color: #333;
+                      margin-bottom: 5px;
+                  }
+                  .stat-label {
+                      color: #6c757d;
+                      font-size: 0.9em;
+                  }
+                  .details-section {
+                      padding: 40px;
+                      border-top: 2px solid #e9ecef;
+                  }
+                  .details-section h2 {
+                      color: #667eea;
+                      margin-bottom: 20px;
+                      font-size: 1.8em;
+                  }
+                  .code-block {
+                      background: #f8f9fa;
+                      border: 1px solid #dee2e6;
+                      border-radius: 5px;
+                      padding: 20px;
+                      overflow-x: auto;
+                      margin-bottom: 20px;
+                  }
+                  .code-block pre {
+                      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                      font-size: 0.9em;
+                      line-height: 1.5;
+                      color: #333;
+                      white-space: pre;
+                  }
+                  .tabs {
+                      display: flex;
+                      border-bottom: 2px solid #e9ecef;
+                      margin-bottom: 20px;
+                      flex-wrap: wrap;
+                  }
+                  .tab {
+                      padding: 15px 25px;
+                      cursor: pointer;
+                      border: none;
+                      background: none;
+                      font-size: 1em;
+                      color: #6c757d;
+                      transition: all 0.2s;
+                      border-bottom: 3px solid transparent;
+                  }
+                  .tab:hover {
+                      color: #667eea;
+                  }
+                  .tab.active {
+                      color: #667eea;
+                      border-bottom-color: #667eea;
+                  }
+                  .tab-content {
+                      display: none;
+                  }
+                  .tab-content.active {
+                      display: block;
+                  }
+                  footer {
+                      background: #f8f9fa;
+                      padding: 20px;
+                      text-align: center;
+                      color: #6c757d;
+                      font-size: 0.9em;
+                      border-top: 2px solid #e9ecef;
+                  }
+                  .meta-info {
+                      background: #e7f3ff;
+                      border-left: 4px solid #667eea;
+                      padding: 15px 20px;
+                      margin-bottom: 30px;
+                      border-radius: 5px;
+                  }
+                  .meta-info p {
+                      margin: 5px 0;
+                      color: #495057;
+                  }
+                  .badge {
+                      display: inline-block;
+                      padding: 5px 12px;
+                      background: #667eea;
+                      color: white;
+                      border-radius: 20px;
+                      font-size: 0.85em;
+                      margin: 5px 5px 5px 0;
+                  }
+                  @media (max-width: 768px) {
+                      header h1 {
+                          font-size: 1.8em;
+                      }
+                      .stats-grid {
+                          grid-template-columns: 1fr;
+                          padding: 20px;
+                      }
+                      .details-section {
+                          padding: 20px;
+                      }
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <header>
+                      <h1>📊 Homeshell Binary Statistics</h1>
+                      <p>Detailed analysis of binary size, dependencies, and composition</p>
+                  </header>
+                  
+                  <div class="meta-info" style="margin: 30px 40px;">
+                      <p><strong>Build Date:</strong> BUILD_DATE_PLACEHOLDER</p>
+                      <p><strong>Commit:</strong> COMMIT_SHA_PLACEHOLDER (COMMIT_DATE_PLACEHOLDER)</p>
+                      <p><strong>Platform:</strong> Linux x86_64</p>
+                      <p><strong>Compiler:</strong> GCC with C++20</p>
+                  </div>
+                  
+                  <div class="stats-grid">
+                      <div class="stat-card">
+                          <h3>Release Build</h3>
+                          <div class="stat-value">RELEASE_SIZE_MB_PLACEHOLDER</div>
+                          <div class="stat-label">MB</div>
+                      </div>
+                      
+                      <div class="stat-card">
+                          <h3>Debug Build</h3>
+                          <div class="stat-value">DEBUG_SIZE_MB_PLACEHOLDER</div>
+                          <div class="stat-label">MB</div>
+                      </div>
+                      
+                      <div class="stat-card">
+                          <h3>Stripped</h3>
+                          <div class="stat-value">STRIPPED_SIZE_MB_PLACEHOLDER</div>
+                          <div class="stat-label">MB (Release)</div>
+                      </div>
+                      
+                      <div class="stat-card">
+                          <h3>Symbols</h3>
+                          <div class="stat-value">RELEASE_SYMBOLS_PLACEHOLDER</div>
+                          <div class="stat-label">Release Build</div>
+                      </div>
+                  </div>
+                  
+                  <div class="details-section">
+                      <h2>📦 Binary Details</h2>
+                      
+                      <div class="tabs">
+                          <button class="tab active" onclick="showTab('dependencies')">Dependencies</button>
+                          <button class="tab" onclick="showTab('sections')">Sections</button>
+                          <button class="tab" onclick="showTab('symbols')">Top Symbols</button>
+                          <button class="tab" onclick="showTab('composition')">Composition</button>
+                          <button class="tab" onclick="showTab('elf')">ELF Info</button>
+                      </div>
+                      
+                      <div id="dependencies" class="tab-content active">
+                          <div class="code-block">
+                              <pre>LDD_CONTENT_PLACEHOLDER</pre>
+                          </div>
+                      </div>
+                      
+                      <div id="sections" class="tab-content">
+                          <div class="code-block">
+                              <pre>SECTIONS_CONTENT_PLACEHOLDER</pre>
+                          </div>
+                      </div>
+                      
+                      <div id="symbols" class="tab-content">
+                          <div class="code-block">
+                              <pre>SYMBOLS_CONTENT_PLACEHOLDER</pre>
+                          </div>
+                      </div>
+                      
+                      <div id="composition" class="tab-content">
+                          <div class="code-block">
+                              <pre>COMPOSITION_CONTENT_PLACEHOLDER</pre>
+                          </div>
+                      </div>
+                      
+                      <div id="elf" class="tab-content">
+                          <div class="code-block">
+                              <pre>ELF_CONTENT_PLACEHOLDER</pre>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <footer>
+                      <p>Generated automatically by GitHub Actions</p>
+                      <p><a href="https://github.com/fairlight1337/homeshell" style="color: #667eea;">View on GitHub</a></p>
+                  </footer>
+              </div>
+              
+              <script>
+                  function showTab(tabName) {
+                      // Hide all tabs
+                      const contents = document.querySelectorAll('.tab-content');
+                      contents.forEach(content => content.classList.remove('active'));
+                      
+                      const tabs = document.querySelectorAll('.tab');
+                      tabs.forEach(tab => tab.classList.remove('active'));
+                      
+                      // Show selected tab
+                      document.getElementById(tabName).classList.add('active');
+                      event.target.classList.add('active');
+                  }
+              </script>
+          </body>
+          </html>
+          EOF
+          
+          # Escape special characters for sed
+          escape_sed() {
+              echo "$1" | sed -e 's/[\/&]/\\&/g' -e 's/$/\\n/' | tr -d '\n'
+          }
+          
+          # Read file contents and escape them
+          LDD_CONTENT=$(cat stats/ldd.txt | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          SECTIONS_CONTENT=$(cat stats/sections.txt | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          SYMBOLS_CONTENT=$(cat stats/top-symbols.txt | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          COMPOSITION_CONTENT=$(cat stats/composition.txt | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          ELF_CONTENT=$(cat stats/readelf.txt | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
+          
+          # Replace placeholders
+          sed -i "s/BUILD_DATE_PLACEHOLDER/$BUILD_DATE/g" stats/index.html
+          sed -i "s/COMMIT_SHA_PLACEHOLDER/$COMMIT_SHA/g" stats/index.html
+          sed -i "s/COMMIT_DATE_PLACEHOLDER/$COMMIT_DATE/g" stats/index.html
+          sed -i "s/DEBUG_SIZE_MB_PLACEHOLDER/$DEBUG_SIZE_MB/g" stats/index.html
+          sed -i "s/RELEASE_SIZE_MB_PLACEHOLDER/$RELEASE_SIZE_MB/g" stats/index.html
+          sed -i "s/STRIPPED_SIZE_MB_PLACEHOLDER/$STRIPPED_SIZE_MB/g" stats/index.html
+          sed -i "s/DEBUG_SYMBOLS_PLACEHOLDER/$DEBUG_SYMBOLS/g" stats/index.html
+          sed -i "s/RELEASE_SYMBOLS_PLACEHOLDER/$RELEASE_SYMBOLS/g" stats/index.html
+          
+          # Use awk for multi-line replacements
+          awk -v ldd="$LDD_CONTENT" '{gsub(/LDD_CONTENT_PLACEHOLDER/, ldd)}1' stats/index.html > stats/index.tmp && mv stats/index.tmp stats/index.html
+          awk -v sections="$SECTIONS_CONTENT" '{gsub(/SECTIONS_CONTENT_PLACEHOLDER/, sections)}1' stats/index.html > stats/index.tmp && mv stats/index.tmp stats/index.html
+          awk -v symbols="$SYMBOLS_CONTENT" '{gsub(/SYMBOLS_CONTENT_PLACEHOLDER/, symbols)}1' stats/index.html > stats/index.tmp && mv stats/index.tmp stats/index.html
+          awk -v comp="$COMPOSITION_CONTENT" '{gsub(/COMPOSITION_CONTENT_PLACEHOLDER/, comp)}1' stats/index.html > stats/index.tmp && mv stats/index.tmp stats/index.html
+          awk -v elf="$ELF_CONTENT" '{gsub(/ELF_CONTENT_PLACEHOLDER/, elf)}1' stats/index.html > stats/index.tmp && mv stats/index.tmp stats/index.html
+          
+          echo "Binary statistics generated successfully!"
+          echo "Release: $RELEASE_SIZE_MB MB"
+          echo "Debug: $DEBUG_SIZE_MB MB"
+          echo "Stripped: $STRIPPED_SIZE_MB MB"
+
+      - name: Upload statistics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-stats
+          path: stats/
+          retention-days: 90
+
+      - name: Deploy to GitHub Pages (on main branch only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./stats
+          destination_dir: stats
+          keep_files: true
+
