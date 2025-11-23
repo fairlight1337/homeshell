@@ -45,6 +45,18 @@ TEST_F(FileCommandsTest, MkdirGetName)
     EXPECT_EQ(cmd.getName(), "mkdir");
 }
 
+TEST_F(FileCommandsTest, MkdirGetDescription)
+{
+    homeshell::MkdirCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
+}
+
+TEST_F(FileCommandsTest, MkdirGetType)
+{
+    homeshell::MkdirCommand cmd;
+    EXPECT_EQ(cmd.getType(), homeshell::CommandType::Synchronous);
+}
+
 TEST_F(FileCommandsTest, MkdirCreateDirectory)
 {
     homeshell::MkdirCommand cmd;
@@ -92,6 +104,18 @@ TEST_F(FileCommandsTest, TouchGetName)
 {
     homeshell::TouchCommand cmd;
     EXPECT_EQ(cmd.getName(), "touch");
+}
+
+TEST_F(FileCommandsTest, TouchGetDescription)
+{
+    homeshell::TouchCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
+}
+
+TEST_F(FileCommandsTest, TouchGetType)
+{
+    homeshell::TouchCommand cmd;
+    EXPECT_EQ(cmd.getType(), homeshell::CommandType::Synchronous);
 }
 
 TEST_F(FileCommandsTest, TouchCreateFile)
@@ -159,6 +183,18 @@ TEST_F(FileCommandsTest, RmGetName)
 {
     homeshell::RmCommand cmd;
     EXPECT_EQ(cmd.getName(), "rm");
+}
+
+TEST_F(FileCommandsTest, RmGetDescription)
+{
+    homeshell::RmCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
+}
+
+TEST_F(FileCommandsTest, RmGetType)
+{
+    homeshell::RmCommand cmd;
+    EXPECT_EQ(cmd.getType(), homeshell::CommandType::Synchronous);
 }
 
 TEST_F(FileCommandsTest, RmRemoveFile)

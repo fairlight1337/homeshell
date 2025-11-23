@@ -54,6 +54,12 @@ TEST_F(CatCommandTest, GetType)
     EXPECT_EQ(cmd.getType(), homeshell::CommandType::Synchronous);
 }
 
+TEST_F(CatCommandTest, GetDescription)
+{
+    homeshell::CatCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
+}
+
 TEST_F(CatCommandTest, NoArguments)
 {
     homeshell::CatCommand cmd;

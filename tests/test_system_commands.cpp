@@ -345,3 +345,23 @@ TEST_F(SystemCommandsTest, KillMixedValidInvalid)
     }
 }
 
+TEST_F(SystemCommandsTest, KillSignalFlagNoPID)
+{
+    KillCommand cmd;
+    CommandContext ctx;
+    ctx.args = {"-s", "TERM"};  // No PID after signal
+    
+    Status status = cmd.execute(ctx);
+    EXPECT_TRUE(status.isSuccess() == false);
+}
+
+TEST_F(SystemCommandsTest, KillDashFormatInvalidSignal)
+{
+    KillCommand cmd;
+    CommandContext ctx;
+    ctx.args = {"-INVALID", "1"};
+    
+    Status status = cmd.execute(ctx);
+    EXPECT_TRUE(status.isSuccess() == false);
+}
+

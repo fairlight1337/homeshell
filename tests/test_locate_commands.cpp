@@ -141,6 +141,12 @@ TEST_F(LocateCommandsTest, UpdatedbGetType)
     EXPECT_EQ(cmd.getType(), homeshell::CommandType::Synchronous);
 }
 
+TEST_F(LocateCommandsTest, UpdatedbGetDescription)
+{
+    homeshell::UpdatedbCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
+}
+
 TEST_F(LocateCommandsTest, UpdatedbHelp)
 {
     homeshell::UpdatedbCommand cmd;
@@ -166,6 +172,12 @@ TEST_F(LocateCommandsTest, LocateGetType)
 {
     homeshell::LocateCommand cmd;
     EXPECT_EQ(cmd.getType(), homeshell::CommandType::Synchronous);
+}
+
+TEST_F(LocateCommandsTest, LocateGetDescription)
+{
+    homeshell::LocateCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
 }
 
 TEST_F(LocateCommandsTest, LocateHelp)
@@ -205,5 +217,162 @@ TEST_F(LocateCommandsTest, LocateInvalidLimit)
     testing::internal::GetCapturedStdout();
 
     EXPECT_FALSE(status.isSuccess());
+}
+
+TEST_F(LocateCommandsTest, LocateCaseSensitiveFlag)
+{
+    // Create a test database first
+    homeshell::FileDatabase db(db_path_);
+    ASSERT_TRUE(db.open());
+    db.updateDatabase({test_dir_.string()}, {});
+    db.close();
+
+    homeshell::LocateCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"-c", "test"};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+
+    // Should succeed (database exists)
+    EXPECT_TRUE(status.isSuccess());
+}
+
+TEST_F(LocateCommandsTest, LocateCaseInsensitiveFlag)
+{
+    // Create a test database first
+    homeshell::FileDatabase db(db_path_);
+    ASSERT_TRUE(db.open());
+    db.updateDatabase({test_dir_.string()}, {});
+    db.close();
+
+    homeshell::LocateCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"-i", "test"};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+
+    // Should succeed (database exists)
+    EXPECT_TRUE(status.isSuccess());
+}
+
+TEST_F(LocateCommandsTest, LocateMultiplePatterns)
+{
+    homeshell::LocateCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"pattern1", "pattern2"};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(status.isSuccess());
+}
+
+TEST_F(LocateCommandsTest, LocateInvalidLimitString)
+{
+    homeshell::LocateCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"-l", "abc", "test"};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(status.isSuccess());
+}
+
+TEST_F(LocateCommandsTest, LocateWithValidLimit)
+{
+    // Create a test database first
+    homeshell::FileDatabase db(db_path_);
+    ASSERT_TRUE(db.open());
+    db.updateDatabase({test_dir_.string()}, {});
+    db.close();
+
+    homeshell::LocateCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"-l", "10", "test"};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+
+    // Should succeed (database exists)
+    EXPECT_TRUE(status.isSuccess());
+}
+
+TEST_F(LocateCommandsTest, UpdatedbWithPathsAndExcludes)
+{
+    // Create database and add files
+    homeshell::FileDatabase db(db_path_);
+    ASSERT_TRUE(db.open());
+    
+    std::vector<std::string> paths = {test_dir_.string()};
+    std::vector<std::string> excludes = {(test_dir_ / "dir2").string()};
+    
+    auto stats = db.updateDatabase(paths, excludes);
+    EXPECT_GT(stats.total_files, 0);
+    
+    db.close();
+}
+
+TEST_F(LocateCommandsTest, UpdatedbWithPathOption)
+{
+    homeshell::UpdatedbCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"--path", test_dir_.string()};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    std::string output = testing::internal::GetCapturedStdout();
+
+    // Should succeed and show stats
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_TRUE(output.find("Database update complete") != std::string::npos);
+}
+
+TEST_F(LocateCommandsTest, UpdatedbWithExcludeOption)
+{
+    homeshell::UpdatedbCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"--path", test_dir_.string(), "--exclude", (test_dir_ / "dir2").string()};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_TRUE(output.find("Database update complete") != std::string::npos);
+}
+
+TEST_F(LocateCommandsTest, UpdatedbUnknownOption)
+{
+    homeshell::UpdatedbCommand cmd;
+    homeshell::CommandContext ctx;
+    ctx.args = {"--invalid-option"};
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    testing::internal::GetCapturedStdout();
+
+    EXPECT_FALSE(status.isSuccess());
+}
+
+TEST_F(LocateCommandsTest, UpdatedbDefaultPaths)
+{
+    homeshell::UpdatedbCommand cmd;
+    homeshell::CommandContext ctx;
+    // No arguments - should use default paths
+
+    testing::internal::CaptureStdout();
+    auto status = cmd.execute(ctx);
+    std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_TRUE(status.isSuccess());
+    EXPECT_TRUE(output.find("Database update complete") != std::string::npos);
 }
 

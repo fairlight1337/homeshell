@@ -29,6 +29,24 @@ protected:
     std::string test_dir_;
 };
 
+TEST_F(LsCommandTest, GetName)
+{
+    LsCommand cmd;
+    EXPECT_EQ(cmd.getName(), "ls");
+}
+
+TEST_F(LsCommandTest, GetDescription)
+{
+    LsCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
+}
+
+TEST_F(LsCommandTest, GetType)
+{
+    LsCommand cmd;
+    EXPECT_EQ(cmd.getType(), CommandType::Synchronous);
+}
+
 TEST_F(LsCommandTest, BasicListing)
 {
     LsCommand cmd;
@@ -110,16 +128,3 @@ TEST_F(LsCommandTest, InvalidFlag)
     EXPECT_FALSE(status.isOk());
     EXPECT_NE(status.message.find("Unknown flag"), std::string::npos);
 }
-
-TEST_F(LsCommandTest, GetName)
-{
-    LsCommand cmd;
-    EXPECT_EQ(cmd.getName(), "ls");
-}
-
-TEST_F(LsCommandTest, GetType)
-{
-    LsCommand cmd;
-    EXPECT_EQ(cmd.getType(), CommandType::Synchronous);
-}
-

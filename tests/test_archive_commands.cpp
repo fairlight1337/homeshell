@@ -82,6 +82,12 @@ TEST_F(ArchiveCommandsTest, ZipCommandGetName)
     EXPECT_EQ(cmd.getName(), "zip");
 }
 
+TEST_F(ArchiveCommandsTest, ZipCommandGetDescription)
+{
+    ZipCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
+}
+
 TEST_F(ArchiveCommandsTest, ZipCommandGetType)
 {
     ZipCommand cmd;
@@ -146,6 +152,12 @@ TEST_F(ArchiveCommandsTest, UnzipCommandGetName)
 {
     UnzipCommand cmd;
     EXPECT_EQ(cmd.getName(), "unzip");
+}
+
+TEST_F(ArchiveCommandsTest, UnzipCommandGetDescription)
+{
+    UnzipCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
 }
 
 TEST_F(ArchiveCommandsTest, UnzipCommandGetType)
@@ -244,6 +256,12 @@ TEST_F(ArchiveCommandsTest, ZipInfoCommandGetName)
 {
     ZipInfoCommand cmd;
     EXPECT_EQ(cmd.getName(), "zipinfo");
+}
+
+TEST_F(ArchiveCommandsTest, ZipInfoCommandGetDescription)
+{
+    ZipInfoCommand cmd;
+    EXPECT_FALSE(cmd.getDescription().empty());
 }
 
 TEST_F(ArchiveCommandsTest, ZipInfoCommandGetType)
