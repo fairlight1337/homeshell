@@ -266,7 +266,7 @@ We value code quality, test coverage, and thorough documentation. Please ensure 
 Homeshell is licensed under the **BSD 3-Clause License**.
 
 ```
-Copyright (c) 2024, Jan Winkler
+Copyright (c) 2025, Jan Winkler
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

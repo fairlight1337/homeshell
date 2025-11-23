@@ -16,6 +16,7 @@
 #include <homeshell/commands/FindCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
 #include <homeshell/commands/KillCommand.hpp>
+#include <homeshell/commands/LessCommand.hpp>
 #include <homeshell/commands/LocateCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
 #include <homeshell/commands/LsblkCommand.hpp>
@@ -29,6 +30,7 @@
 #include <homeshell/commands/RmCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
 #include <homeshell/commands/SysinfoCommand.hpp>
+#include <homeshell/commands/TailCommand.hpp>
 #include <homeshell/commands/TopCommand.hpp>
 #include <homeshell/commands/TouchCommand.hpp>
 #include <homeshell/commands/TreeCommand.hpp>
@@ -212,6 +214,8 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<CdCommand>());
     registry.registerCommand(std::make_shared<PwdCommand>());
     registry.registerCommand(std::make_shared<CatCommand>());
+    registry.registerCommand(std::make_shared<TailCommand>());
+    registry.registerCommand(std::make_shared<LessCommand>());
     registry.registerCommand(std::make_shared<MkdirCommand>());
     registry.registerCommand(std::make_shared<TouchCommand>());
     registry.registerCommand(std::make_shared<RmCommand>());

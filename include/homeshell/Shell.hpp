@@ -3,6 +3,7 @@
 #include <homeshell/Command.hpp>
 #include <homeshell/Config.hpp>
 #include <homeshell/OutputRedirection.hpp>
+#include <homeshell/PipelineExecutor.hpp>
 #include <homeshell/PromptFormatter.hpp>
 #include <homeshell/Status.hpp>
 #include <homeshell/TerminalInfo.hpp>
@@ -76,6 +77,8 @@ namespace homeshell
  */
 class Shell
 {
+    friend class PipelineExecutor;
+
 public:
     /**
      * @brief Construct shell with configuration and terminal info
@@ -523,6 +526,13 @@ private:
      */
     Status executeCommand(const std::string& line)
     {
+        // Check for pipes first (before output redirection parsing)
+        if (PipelineExecutor::hasPipe(line))
+        {
+            auto commands = PipelineExecutor::splitPipeline(line);
+            return PipelineExecutor::executePipeline(commands, this);
+        }
+
         // Parse for output redirection
         RedirectInfo redirect_info = OutputRedirection::parse(line);
 
@@ -725,7 +735,5 @@ private:
     std::atomic<bool> interrupt_received_;
     std::string history_file_;
 };
-
-Shell* Shell::instance_ = nullptr;
 
 } // namespace homeshell

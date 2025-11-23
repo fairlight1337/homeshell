@@ -17,6 +17,8 @@ add_executable(homeshell_tests
     test_utility_commands.cpp
     test_find_command.cpp
     test_locate_commands.cpp
+    test_tail_command.cpp
+    test_less_command.cpp
 )
 
 # Disable clang-tidy for tests
@@ -39,6 +41,7 @@ target_link_libraries(homeshell_tests
         nlohmann_json::nlohmann_json
         fmt::fmt
         miniz
+        ncurses
 )
 
 target_include_directories(homeshell_tests

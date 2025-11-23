@@ -58,3 +58,6 @@ external/micropython_embed/
 external/sqlcipher/sqlite3.c
 external/sqlcipher/sqlite3.h
 external/sqlcipher/*.o
+
+# Wiki symlink
+wiki

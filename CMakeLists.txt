@@ -151,6 +151,7 @@ add_library(homeshell
     src/VirtualFilesystem.cpp
     src/OutputRedirection.cpp
     src/FileDatabase.cpp
+    src/PipelineExecutor.cpp
     src/commands/PythonCommand.cpp
     src/commands/ChmodCommand.cpp
     src/commands/VersionCommand.cpp
