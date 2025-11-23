@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homeshell Binary Statistics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 40px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .details-section {
+            padding: 40px;
+            border-top: 2px solid #e9ecef;
+        }
+        .details-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .code-block pre {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: #333;
+            white-space: pre;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1em;
+            color: #6c757d;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab:hover {
+            color: #667eea;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+            border-top: 2px solid #e9ecef;
+        }
+        .meta-info {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+        .meta-info p {
+            margin: 5px 0;
+            color: #495057;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin: 5px 5px 5px 0;
+        }
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            .details-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Homeshell Binary Statistics</h1>
+            <p>Detailed analysis of binary size, dependencies, and composition</p>
+        </header>
+        
+        <div class="meta-info" style="margin: 30px 40px;">
+            <p><strong>Build Date:</strong> 2025-11-23 18:52:53 UTC</p>
+            <p><strong>Commit:</strong> 89b82c0 (2025-11-23 10:49:11 -0800)</p>
+            <p><strong>Platform:</strong> Linux x86_64</p>
+            <p><strong>Compiler:</strong> GCC with C++20</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Release Build</h3>
+                <div class="stat-value">5.54</div>
+                <div class="stat-label">MB</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Debug Build</h3>
+                <div class="stat-value">20.39</div>
+                <div class="stat-label">MB</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Stripped</h3>
+                <div class="stat-value">4.61</div>
+                <div class="stat-label">MB (Release)</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Symbols</h3>
+                <div class="stat-value">13306</div>
+                <div class="stat-label">Release Build</div>
+            </div>
+        </div>
+        
+        <div class="details-section">
+            <h2>📦 Binary Details</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('dependencies')">Dependencies</button>
+                <button class="tab" onclick="showTab('sections')">Sections</button>
+                <button class="tab" onclick="showTab('symbols')">Top Symbols</button>
+                <button class="tab" onclick="showTab('composition')">Composition</button>
+                <button class="tab" onclick="showTab('elf')">ELF Info</button>
+            </div>
+            
+            <div id="dependencies" class="tab-content active">
+                <div class="code-block">
+                    <pre>=== Dynamic Library Dependencies ===
+	linux-vdso.so.1 (0x00007f4e963fc000)
+	libcrypto.so.3 =LDD_CONTENT_PLACEHOLDERgt; /lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007f4e95800000)
+	libm.so.6 =LDD_CONTENT_PLACEHOLDERgt; /lib/x86_64-linux-gnu/libm.so.6 (0x00007f4e96303000)
+	libc.so.6 =LDD_CONTENT_PLACEHOLDERgt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f4e95400000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f4e963fe000)</pre>
+                </div>
+            </div>
+            
+            <div id="sections" class="tab-content">
+                <div class="code-block">
+                    <pre>=== Section Sizes ===
+   text	   data	    bss	    dec	    hex	filename
+4726171	 103440	  83624	4913235	 4af853	build-release/homeshell-linux
+
+Detailed Section Breakdown:
+  0 .interp       0000001c  0000000000000350  0000000000000350  00000350  2**0
+  1 .note.gnu.property 00000030  0000000000000370  0000000000000370  00000370  2**3
+  2 .note.gnu.build-id 00000024  00000000000003a0  00000000000003a0  000003a0  2**2
+  3 .note.ABI-tag 00000020  00000000000003c4  00000000000003c4  000003c4  2**2
+  4 .gnu.hash     00000038  00000000000003e8  00000000000003e8  000003e8  2**3
+  5 .dynsym       00001fb0  0000000000000420  0000000000000420  00000420  2**3
+  6 .dynstr       00000e23  00000000000023d0  00000000000023d0  000023d0  2**0
+  7 .gnu.version  000002a4  00000000000031f4  00000000000031f4  000031f4  2**1
+  8 .gnu.version_r 000001b0  0000000000003498  0000000000003498  00003498  2**3
+  9 .rela.dyn     000343c8  0000000000003648  0000000000003648  00003648  2**3
+ 10 .rela.plt     00001dd0  0000000000037a10  0000000000037a10  00037a10  2**3
+ 11 .init         0000001b  000000000003a000  000000000003a000  0003a000  2**2
+ 12 .plt          000013f0  000000000003a020  000000000003a020  0003a020  2**4
+ 13 .plt.got      00000010  000000000003b410  000000000003b410  0003b410  2**4
+ 14 .plt.sec      000013e0  000000000003b420  000000000003b420  0003b420  2**4
+ 15 .text         0038ae92  000000000003c800  000000000003c800  0003c800  2**4
+ 16 .fini         0000000d  00000000003c7694  00000000003c7694  003c7694  2**2
+ 17 .rodata       00036290  00000000003c8000  00000000003c8000  003c8000  2**5
+ 18 .stapsdt.base 00000001  00000000003fe290  00000000003fe290  003fe290  2**0
+ 19 .eh_frame_hdr 000123cc  00000000003fe294  00000000003fe294  003fe294  2**2
+ 20 .eh_frame     00062f78  0000000000410660  0000000000410660  00410660  2**3
+ 21 .gcc_except_table 0000fca5  00000000004735d8  00000000004735d8  004735d8  2**2
+ 22 .tbss         00000020  00000000004840c8  00000000004840c8  004840c8  2**3
+ 23 .init_array   00000080  00000000004840c8  00000000004840c8  004840c8  2**3
+ 24 .fini_array   00000018  0000000000484148  0000000000484148  00484148  2**3
+ 25 .data.rel.ro  00013c10  0000000000484160  0000000000484160  00484160  2**5
+ 26 .dynamic      00000220  0000000000497d70  0000000000497d70  00497d70  2**3
+ 27 .got          00001070  0000000000497f90  0000000000497f90  00497f90  2**3
+ 28 .data         000044d8  0000000000499000  0000000000499000  00499000  2**5
+ 29 .bss          00014688  000000000049d4e0  000000000049d4e0  0049d4d8  2**5
+ 30 .comment      0000002b  0000000000000000  0000000000000000  0049d4d8  2**0
+ 31 .note.stapsdt 000000e8  0000000000000000  0000000000000000  0049d504  2**2</pre>
+                </div>
+            </div>
+            
+            <div id="symbols" class="tab-content">
+                <div class="code-block">
+                    <pre>=== Top 50 Symbols by Size ===
+000000000049db20 0000000000010000 B homeshell::PythonCommand::heap_
+00000000002a9b10 000000000000b9ed t sqlite3VdbeExec
+00000000002cc870 0000000000005b21 t yy_reduce.isra.0
+00000000002955f0 000000000000596f t sqlite3WhereBegin
+00000000002d94c0 000000000000510a t sqlite3Pragma
+0000000000278150 0000000000004bf3 t sqlite3Select
+00000000003b1b00 00000000000043f6 t d_print_comp_inner
+0000000000148640 0000000000003f18 T replxx::Replxx::ReplxxImpl::ReplxxImpl(_IO_FILE*, _IO_FILE*, _IO_FILE*)
+0000000000148640 0000000000003f18 T replxx::Replxx::ReplxxImpl::ReplxxImpl(_IO_FILE*, _IO_FILE*, _IO_FILE*)
+00000000002d5aa0 0000000000003a20 T sqlcipher_codec_pragma
+00000000002bc450 0000000000003920 t sqlite3Update.constprop.0
+00000000002c5040 0000000000003616 t sqlite3Insert
+0000000000288a00 000000000000331d t exprAnalyze
+00000000002c1ef0 0000000000003144 t sqlite3GenerateConstraintChecks
+000000000029f2a0 00000000000030ec t multiSelect
+0000000000245eb0 0000000000002d92 t resolveExprStep
+00000000001e8ce0 0000000000002c37 T sqlite3_str_vappendf
+00000000002725c0 0000000000002a95 t balance_nonroot
+0000000000282570 0000000000002a13 t sqlite3ExprCodeTarget
+00000000001112e0 00000000000029b6 t fmt::v12::detail::format_dragon(fmt::v12::detail::basic_fpSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned __int128SYMBOLS_CONTENT_PLACEHOLDERgt;, unsigned int, int, fmt::v12::detail::bufferSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;SYMBOLS_CONTENT_PLACEHOLDERamp;, intSYMBOLS_CONTENT_PLACEHOLDERamp;) [clone .isra.0]
+0000000000103a70 00000000000025d8 T homeshell::PipelineExecutor::executePipeline(std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::Shell*)
+00000000000ae2d0 00000000000024fe W CLI::ConfigBase::to_config(CLI::App const*, bool, bool, std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;) const
+000000000015a300 0000000000002495 T tinfl_decompress
+000000000031ab70 0000000000002352 t std::__cxx11::time_getSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;::_M_extract_via_format(std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::ios_baseSYMBOLS_CONTENT_PLACEHOLDERamp;, std::_Ios_IostateSYMBOLS_CONTENT_PLACEHOLDERamp;, tm*, char const*, std::__time_get_stateSYMBOLS_CONTENT_PLACEHOLDERamp;) const [clone .localalias]
+000000000031ab70 0000000000002352 W std::__cxx11::time_getSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;::_M_extract_via_format(std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::ios_baseSYMBOLS_CONTENT_PLACEHOLDERamp;, std::_Ios_IostateSYMBOLS_CONTENT_PLACEHOLDERamp;, tm*, char const*, std::__time_get_stateSYMBOLS_CONTENT_PLACEHOLDERamp;) const
+0000000000128150 0000000000002235 W void fmt::v12::detail::parse_format_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, fmt::v12::detail::format_handlerSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(fmt::v12::basic_string_viewSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, fmt::v12::detail::format_handlerSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;SYMBOLS_CONTENT_PLACEHOLDERamp;SYMBOLS_CONTENT_PLACEHOLDERamp;)
+00000000002c9910 00000000000021e4 t selectExpander
+00000000003316a0 0000000000002186 t std::__cxx11::time_getSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_tSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;::_M_extract_via_format(std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_tSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_tSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::ios_baseSYMBOLS_CONTENT_PLACEHOLDERamp;, std::_Ios_IostateSYMBOLS_CONTENT_PLACEHOLDERamp;, tm*, wchar_t const*, std::__time_get_stateSYMBOLS_CONTENT_PLACEHOLDERamp;) const [clone .localalias]
+00000000003316a0 0000000000002186 W std::__cxx11::time_getSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_tSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;::_M_extract_via_format(std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_tSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::istreambuf_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_t, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;wchar_tSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::ios_baseSYMBOLS_CONTENT_PLACEHOLDERamp;, std::_Ios_IostateSYMBOLS_CONTENT_PLACEHOLDERamp;, tm*, wchar_t const*, std::__time_get_stateSYMBOLS_CONTENT_PLACEHOLDERamp;) const
+00000000000a73b0 0000000000001ffb W CLI::App::_parse_arg(std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;SYMBOLS_CONTENT_PLACEHOLDERamp;, CLI::detail::Classifier, bool)
+000000000009a9a0 0000000000001f1e W CLI::ConfigBase::from_config(std::istreamSYMBOLS_CONTENT_PLACEHOLDERamp;) const
+00000000000fe670 0000000000001f14 T homeshell::FileDatabase::scanDirectory(std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileEntry, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileEntrySYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;SYMBOLS_CONTENT_PLACEHOLDERamp;)
+00000000000c1b30 0000000000001cf3 W void std::__make_heapSYMBOLS_CONTENT_PLACEHOLDERlt;__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsusbCommand::getUsbDevices()::{lambda(homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsusbCommand::getUsbDevices()::{lambda(homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt;SYMBOLS_CONTENT_PLACEHOLDERamp;)
+00000000000eb600 0000000000001cda T homeshell::EncryptedMount::listDirectory(std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;)
+000000000010ce60 0000000000001beb T homeshell::FindCommand::findRecursive(std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::FindCommand::FindOptions constSYMBOLS_CONTENT_PLACEHOLDERamp;, int, homeshell::CommandContext constSYMBOLS_CONTENT_PLACEHOLDERamp;)
+00000000000bb3f0 0000000000001bad W bool nlohmann::json_abi_v3_12_0::detail::parserSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::basic_jsonSYMBOLS_CONTENT_PLACEHOLDERlt;std::map, std::vector, std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, bool, long, unsigned long, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned char, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, voidSYMBOLS_CONTENT_PLACEHOLDERgt;, nlohmann::json_abi_v3_12_0::detail::input_stream_adapterSYMBOLS_CONTENT_PLACEHOLDERgt;::sax_parse_internalSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::detail::json_sax_dom_callback_parserSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::basic_jsonSYMBOLS_CONTENT_PLACEHOLDERlt;std::map, std::vector, std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, bool, long, unsigned long, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned char, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, voidSYMBOLS_CONTENT_PLACEHOLDERgt;, nlohmann::json_abi_v3_12_0::detail::input_stream_adapterSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(nlohmann::json_abi_v3_12_0::detail::json_sax_dom_callback_parserSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::basic_jsonSYMBOLS_CONTENT_PLACEHOLDERlt;std::map, std::vector, std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, bool, long, unsigned long, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned char, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, voidSYMBOLS_CONTENT_PLACEHOLDERgt;, nlohmann::json_abi_v3_12_0::detail::input_stream_adapterSYMBOLS_CONTENT_PLACEHOLDERgt;*)
+00000000000f7ca0 0000000000001b34 W void std::__introsort_loopSYMBOLS_CONTENT_PLACEHOLDERlt;__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfo*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfo, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfoSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, long, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FilesystemHelper::listDirectory(std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;)::{lambda(homeshell::FileInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::FileInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfo*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfo, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfoSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfo*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfo, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FileInfoSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, long, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::FilesystemHelper::listDirectory(std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;)::{lambda(homeshell::FileInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::FileInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt;)
+00000000000bdb60 0000000000001b2a W void std::__make_heapSYMBOLS_CONTENT_PLACEHOLDERlt;__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsblkCommand::getBlockDevices()::{lambda(homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsblkCommand::getBlockDevices()::{lambda(homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt;SYMBOLS_CONTENT_PLACEHOLDERamp;)
+000000000005c3c0 0000000000001b15 W CLI::App::remaining_size(bool) const
+000000000029caf0 0000000000001a9b t sqlite3WindowCodeStep
+00000000000499c0 0000000000001a7f T main
+000000000010ea50 0000000000001a7f T homeshell::FindCommand::execute(homeshell::CommandContext constSYMBOLS_CONTENT_PLACEHOLDERamp;)
+000000000009e9e0 0000000000001a69 W void std::__insertion_sortSYMBOLS_CONTENT_PLACEHOLDERlt;__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsusbCommand::getUsbDevices()::{lambda(homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::UsbDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsusbCommand::getUsbDevices()::{lambda(homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::UsbDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt;)
+00000000000f97e0 0000000000001a48 W homeshell::FilesystemHelper::listDirectory(std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;)
+00000000000ed9f0 00000000000019f7 T homeshell::VirtualFilesystem::resolveRelativePath(std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; constSYMBOLS_CONTENT_PLACEHOLDERamp;) const
+00000000001bb370 00000000000019f3 T _nc_tiparm
+000000000009d030 00000000000019a7 W void std::__insertion_sortSYMBOLS_CONTENT_PLACEHOLDERlt;__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsblkCommand::getBlockDevices()::{lambda(homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDevice, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::BlockDeviceSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::LsblkCommand::getBlockDevices()::{lambda(homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::BlockDevice constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt;)
+00000000002e0d00 000000000000197b t sqlite3EndTable
+00000000000c3ac0 0000000000001945 W bool nlohmann::json_abi_v3_12_0::detail::parserSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::basic_jsonSYMBOLS_CONTENT_PLACEHOLDERlt;std::map, std::vector, std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, bool, long, unsigned long, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned char, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, voidSYMBOLS_CONTENT_PLACEHOLDERgt;, nlohmann::json_abi_v3_12_0::detail::input_stream_adapterSYMBOLS_CONTENT_PLACEHOLDERgt;::sax_parse_internalSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::detail::json_sax_dom_parserSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::basic_jsonSYMBOLS_CONTENT_PLACEHOLDERlt;std::map, std::vector, std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, bool, long, unsigned long, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned char, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, voidSYMBOLS_CONTENT_PLACEHOLDERgt;, nlohmann::json_abi_v3_12_0::detail::input_stream_adapterSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(nlohmann::json_abi_v3_12_0::detail::json_sax_dom_parserSYMBOLS_CONTENT_PLACEHOLDERlt;nlohmann::json_abi_v3_12_0::basic_jsonSYMBOLS_CONTENT_PLACEHOLDERlt;std::map, std::vector, std::__cxx11::basic_stringSYMBOLS_CONTENT_PLACEHOLDERlt;char, std::char_traitsSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt;, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, bool, long, unsigned long, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned char, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;unsigned charSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, voidSYMBOLS_CONTENT_PLACEHOLDERgt;, nlohmann::json_abi_v3_12_0::detail::input_stream_adapterSYMBOLS_CONTENT_PLACEHOLDERgt;*)
+00000000000d0840 0000000000001894 W void std::__introsort_loopSYMBOLS_CONTENT_PLACEHOLDERlt;__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfo*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfo, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfoSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, long, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::TopCommand::execute(homeshell::CommandContext constSYMBOLS_CONTENT_PLACEHOLDERamp;)::{lambda(homeshell::ProcessInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::ProcessInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;(__gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfo*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfo, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfoSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, __gnu_cxx::__normal_iteratorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfo*, std::vectorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfo, std::allocatorSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::ProcessInfoSYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt; SYMBOLS_CONTENT_PLACEHOLDERgt;, long, __gnu_cxx::__ops::_Iter_comp_iterSYMBOLS_CONTENT_PLACEHOLDERlt;homeshell::TopCommand::execute(homeshell::CommandContext constSYMBOLS_CONTENT_PLACEHOLDERamp;)::{lambda(homeshell::ProcessInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;, homeshell::ProcessInfo constSYMBOLS_CONTENT_PLACEHOLDERamp;)#1}SYMBOLS_CONTENT_PLACEHOLDERgt;)</pre>
+                </div>
+            </div>
+            
+            <div id="composition" class="tab-content">
+                <div class="code-block">
+                    <pre>=== Object File Composition ===
+Analyzing symbol origins...
+   4854 std
+    475 homeshell
+    426 replxx
+    295 CLI
+    137 void std
+    117 fmt
+     93 __gnu_cxx
+     87 transaction clone for std
+     57 nlohmann
+     50 __cxxabiv1
+     49 bool std
+     39 
+     36 virtual thunk to std
+     12 void fmt
+     12 non-virtual thunk to std
+     12 int std
+     12 bool __gnu_cxx
+      7 wchar_t* std
+      7 char* std
+      6 bool nlohmann
+      4 operator new
+      4 long std
+      4 char* fmt
+      3 void CLI
+      3 read_encoded_value_with_base
+      3 operator new[]
+      3 bool CLI
+      2 operator delete
+      2 modify_fwd
+      2 int __gnu_cxx</pre>
+                </div>
+            </div>
+            
+            <div id="elf" class="tab-content">
+                <div class="code-block">
+                    <pre>=== ELF Header Information ===
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 03 00 00 00 00 00 00 00 00 
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - GNU
+  ABI Version:                       0
+  Type:                              DYN (Position-Independent Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x4bd90
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          5806984 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         14
+  Size of section headers:           64 (bytes)
+  Number of section headers:         36
+  Section header string table index: 35
+
+=== Section Headers ===
+There are 36 section headers, starting at offset 0x589b88:
+
+Section Headers:
+  [Nr] Name              Type             Address           Offset
+       Size              EntSize          Flags  Link  Info  Align
+  [ 0]                   NULL             0000000000000000  00000000
+       0000000000000000  0000000000000000           0     0     0
+  [ 1] .interp           PROGBITS         0000000000000350  00000350
+       000000000000001c  0000000000000000   A       0     0     1
+  [ 2] .note.gnu.pr[...] NOTE             0000000000000370  00000370
+       0000000000000030  0000000000000000   A       0     0     8
+  [ 3] .note.gnu.bu[...] NOTE             00000000000003a0  000003a0
+       0000000000000024  0000000000000000   A       0     0     4
+  [ 4] .note.ABI-tag     NOTE             00000000000003c4  000003c4
+       0000000000000020  0000000000000000   A       0     0     4
+  [ 5] .gnu.hash         GNU_HASH         00000000000003e8  000003e8
+       0000000000000038  0000000000000000   A       6     0     8
+  [ 6] .dynsym           DYNSYM           0000000000000420  00000420
+       0000000000001fb0  0000000000000018   A       7     1     8
+  [ 7] .dynstr           STRTAB           00000000000023d0  000023d0
+       0000000000000e23  0000000000000000   A       0     0     1
+  [ 8] .gnu.version      VERSYM           00000000000031f4  000031f4
+       00000000000002a4  0000000000000002   A       6     0     2
+  [ 9] .gnu.version_r    VERNEED          0000000000003498  00003498
+       00000000000001b0  0000000000000000   A       7     4     8
+  [10] .rela.dyn         RELA             0000000000003648  00003648
+       00000000000343c8  0000000000000018   A       6     0     8
+  [11] .rela.plt         RELA             0000000000037a10  00037a10
+       0000000000001dd0  0000000000000018  AI       6    28     8
+  [12] .init             PROGBITS         000000000003a000  0003a000
+       000000000000001b  0000000000000000  AX       0     0     4
+  [13] .plt              PROGBITS         000000000003a020  0003a020
+       00000000000013f0  0000000000000010  AX       0     0     16
+  [14] .plt.got          PROGBITS         000000000003b410  0003b410
+       0000000000000010  0000000000000010  AX       0     0     16
+  [15] .plt.sec          PROGBITS         000000000003b420  0003b420
+       00000000000013e0  0000000000000010  AX       0     0     16
+  [16] .text             PROGBITS         000000000003c800  0003c800
+       000000000038ae92  0000000000000000  AX       0     0     16
+  [17] .fini             PROGBITS         00000000003c7694  003c7694
+       000000000000000d  0000000000000000  AX       0     0     4
+  [18] .rodata           PROGBITS         00000000003c8000  003c8000
+       0000000000036290  0000000000000000   A       0     0     32
+  [19] .stapsdt.base     PROGBITS         00000000003fe290  003fe290
+       0000000000000001  0000000000000000   A       0     0     1
+  [20] .eh_frame_hdr     PROGBITS         00000000003fe294  003fe294
+       00000000000123cc  0000000000000000   A       0     0     4
+  [21] .eh_frame         PROGBITS         0000000000410660  00410660
+       0000000000062f78  0000000000000000   A       0     0     8
+  [22] .gcc_except_table PROGBITS         00000000004735d8  004735d8
+       000000000000fca5  0000000000000000   A       0     0     4
+  [23] .tbss             NOBITS           00000000004840c8  004840c8
+       0000000000000020  0000000000000000 WAT       0     0     8
+  [24] .init_array       INIT_ARRAY       00000000004840c8  004840c8
+       0000000000000080  0000000000000008  WA       0     0     8
+  [25] .fini_array       FINI_ARRAY       0000000000484148  00484148
+       0000000000000018  0000000000000008  WA       0     0     8
+  [26] .data.rel.ro      PROGBITS         0000000000484160  00484160
+       0000000000013c10  0000000000000000  WA       0     0     32
+  [27] .dynamic          DYNAMIC          0000000000497d70  00497d70
+       0000000000000220  0000000000000010  WA       7     0     8
+  [28] .got              PROGBITS         0000000000497f90  00497f90
+       0000000000001070  0000000000000008  WA       0     0     8
+  [29] .data             PROGBITS         0000000000499000  00499000
+       00000000000044d8  0000000000000000  WA       0     0     32
+  [30] .bss              NOBITS           000000000049d4e0  0049d4d8
+       0000000000014688  0000000000000000  WA       0     0     32
+  [31] .comment          PROGBITS         0000000000000000  0049d4d8
+       000000000000002b  0000000000000001  MS       0     0     1
+  [32] .note.stapsdt     NOTE             0000000000000000  0049d504
+       00000000000000e8  0000000000000000           0     0     4
+  [33] .symtab           SYMTAB           0000000000000000  0049d5f0
+       000000000004f2d8  0000000000000018          34   3920     8
+  [34] .strtab           STRTAB           0000000000000000  004ec8c8
+       000000000009d165  0000000000000000           0     0     1
+  [35] .shstrtab         STRTAB           0000000000000000  00589a2d
+       000000000000015b  0000000000000000           0     0     1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  R (retain), D (mbind), l (large), p (processor specific)
+
+=== Program Headers ===
+
+Elf file type is DYN (Position-Independent Executable file)
+Entry point 0x4bd90
+There are 14 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040
+                 0x0000000000000310 0x0000000000000310  R      0x8
+  INTERP         0x0000000000000350 0x0000000000000350 0x0000000000000350
+                 0x000000000000001c 0x000000000000001c  R      0x1
+      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x00000000000397e0 0x00000000000397e0  R      0x1000
+  LOAD           0x000000000003a000 0x000000000003a000 0x000000000003a000
+                 0x000000000038d6a1 0x000000000038d6a1  R E    0x1000
+  LOAD           0x00000000003c8000 0x00000000003c8000 0x00000000003c8000
+                 0x00000000000bb27d 0x00000000000bb27d  R      0x1000
+  LOAD           0x00000000004840c8 0x00000000004840c8 0x00000000004840c8
+                 0x0000000000019410 0x000000000002daa0  RW     0x1000
+  DYNAMIC        0x0000000000497d70 0x0000000000497d70 0x0000000000497d70
+                 0x0000000000000220 0x0000000000000220  RW     0x8
+  NOTE           0x0000000000000370 0x0000000000000370 0x0000000000000370
+                 0x0000000000000030 0x0000000000000030  R      0x8
+  NOTE           0x00000000000003a0 0x00000000000003a0 0x00000000000003a0
+                 0x0000000000000044 0x0000000000000044  R      0x4
+  TLS            0x00000000004840c8 0x00000000004840c8 0x00000000004840c8
+                 0x0000000000000000 0x0000000000000020  R      0x8
+  GNU_PROPERTY   0x0000000000000370 0x0000000000000370 0x0000000000000370
+                 0x0000000000000030 0x0000000000000030  R      0x8
+  GNU_EH_FRAME   0x00000000003fe294 0x00000000003fe294 0x00000000003fe294
+                 0x00000000000123cc 0x00000000000123cc  R      0x4
+  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000000 0x0000000000000000  RW     0x10
+  GNU_RELRO      0x00000000004840c8 0x00000000004840c8 0x00000000004840c8
+                 0x0000000000014f38 0x0000000000014f38  R      0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .interp 
+   02     .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt 
+   03     .init .plt .plt.got .plt.sec .text .fini 
+   04     .rodata .stapsdt.base .eh_frame_hdr .eh_frame .gcc_except_table 
+   05     .init_array .fini_array .data.rel.ro .dynamic .got .data .bss 
+   06     .dynamic 
+   07     .note.gnu.property 
+   08     .note.gnu.build-id .note.ABI-tag 
+   09     .tbss 
+   10     .note.gnu.property 
+   11     .eh_frame_hdr 
+   12     
+   13     .init_array .fini_array .data.rel.ro .dynamic .got </pre>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Generated automatically by GitHub Actions</p>
+            <p><a href="https://github.com/fairlight1337/homeshell" style="color: #667eea;">View on GitHub</a></p>
+        </footer>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

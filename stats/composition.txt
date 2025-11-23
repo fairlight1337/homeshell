@@ -1,0 +1,32 @@
+=== Object File Composition ===
+Analyzing symbol origins...
+   4854 std
+    475 homeshell
+    426 replxx
+    295 CLI
+    137 void std
+    117 fmt
+     93 __gnu_cxx
+     87 transaction clone for std
+     57 nlohmann
+     50 __cxxabiv1
+     49 bool std
+     39 
+     36 virtual thunk to std
+     12 void fmt
+     12 non-virtual thunk to std
+     12 int std
+     12 bool __gnu_cxx
+      7 wchar_t* std
+      7 char* std
+      6 bool nlohmann
+      4 operator new
+      4 long std
+      4 char* fmt
+      3 void CLI
+      3 read_encoded_value_with_base
+      3 operator new[]
+      3 bool CLI
+      2 operator delete
+      2 modify_fwd
+      2 int __gnu_cxx
