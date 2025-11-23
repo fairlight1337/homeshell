@@ -14,6 +14,7 @@
 #include <homeshell/commands/ExitCommand.hpp>
 #include <homeshell/commands/FileCommand.hpp>
 #include <homeshell/commands/FindCommand.hpp>
+#include <homeshell/commands/GrepCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
 #include <homeshell/commands/KillCommand.hpp>
 #include <homeshell/commands/LessCommand.hpp>
@@ -222,6 +223,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<ChmodCommand>());
     registry.registerCommand(std::make_shared<FileCommand>());
     registry.registerCommand(std::make_shared<FindCommand>());
+    registry.registerCommand(std::make_shared<GrepCommand>());
     registry.registerCommand(std::make_shared<TreeCommand>());
     registry.registerCommand(std::make_shared<EditCommand>());
 

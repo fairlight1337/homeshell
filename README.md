@@ -98,6 +98,22 @@ tree -d 2  # Directory tree, 2 levels deep
 # Search for files
 updatedb --path /home/user
 locate config.json
+
+# Search text in files
+grep "error" log.txt
+grep -ri "TODO" src/        # Recursive, case-insensitive
+```
+
+### Text Processing with Pipes
+```bash
+# Filter and view logs
+cat application.log | grep ERROR | less
+
+# Tail and filter
+tail -f /var/log/syslog | grep "error"
+
+# Complex pipelines
+grep -r "function" src/ | grep -v "test" | less
 ```
 
 ### Encrypted Storage

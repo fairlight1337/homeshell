@@ -16,6 +16,7 @@ add_executable(homeshell_tests
     test_output_redirection.cpp
     test_utility_commands.cpp
     test_find_command.cpp
+    test_grep_command.cpp
     test_locate_commands.cpp
     test_tail_command.cpp
     test_less_command.cpp
