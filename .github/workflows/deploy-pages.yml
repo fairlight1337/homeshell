@@ -94,7 +94,26 @@ jobs:
         # Copy coverage report
         mkdir -p gh-pages/coverage
         cp -r build/coverage/html/* gh-pages/coverage/
-        
+    
+    - name: Download binary statistics
+      uses: actions/download-artifact@v4
+      with:
+        name: binary-stats
+        path: binary-stats-download
+      continue-on-error: true
+    
+    - name: Copy binary statistics to Pages
+      run: |
+        if [ -d "binary-stats-download" ]; then
+          mkdir -p gh-pages/stats
+          cp -r binary-stats-download/* gh-pages/stats/
+          echo "✓ Binary statistics included in deployment"
+        else
+          echo "⚠ Binary statistics not available (this is OK for the first run)"
+        fi
+    
+    - name: Create landing page
+      run: |
         # Create landing page
         cat > gh-pages/index.html << 'EOF'
         <!DOCTYPE html>
@@ -258,6 +277,12 @@ jobs:
                         <h2>📊 Code Coverage</h2>
                         <p>Explore detailed test coverage reports and statistics.</p>
                         <a href="coverage/index.html" class="btn">View Coverage</a>
+                    </div>
+                    
+                    <div class="card">
+                        <h2>📏 Binary Statistics</h2>
+                        <p>View binary size, dependencies, and symbol analysis.</p>
+                        <a href="stats/index.html" class="btn">View Statistics</a>
                     </div>
                     
                     <div class="card">
