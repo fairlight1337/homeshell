@@ -37,7 +37,9 @@ jobs:
           libsqlcipher-dev \
           libncurses-dev \
           libtinfo-dev \
-          libreadline-dev
+          libreadline-dev \
+          nlohmann-json3-dev \
+          tcl
     
     - name: Build SQLCipher
       run: |

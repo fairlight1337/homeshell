@@ -236,8 +236,8 @@ public:
                 }
                 else
                 {
-                    match_count += searchFile(file, regex_pattern, show_line_numbers,
-                                             show_filename, use_color);
+                    match_count += searchFile(file, regex_pattern, show_line_numbers, show_filename,
+                                              use_color);
                 }
             }
         }
@@ -299,8 +299,7 @@ private:
             std::ifstream file(filename);
             if (!file.good())
             {
-                fmt::print(fg(fmt::color::red), "grep: {}: No such file or directory\n",
-                          filename);
+                fmt::print(fg(fmt::color::red), "grep: {}: No such file or directory\n", filename);
                 return 0;
             }
 
@@ -310,16 +309,14 @@ private:
         }
 
         std::istringstream stream(content);
-        return searchStream(stream, pattern, filename, show_line_numbers, show_filename,
-                           use_color);
+        return searchStream(stream, pattern, filename, show_line_numbers, show_filename, use_color);
     }
 
     /**
      * @brief Search in a stream
      */
-    int searchStream(std::istream& stream, const std::regex& pattern,
-                     const std::string& filename, bool show_line_numbers, bool show_filename,
-                     bool use_color)
+    int searchStream(std::istream& stream, const std::regex& pattern, const std::string& filename,
+                     bool show_line_numbers, bool show_filename, bool use_color)
     {
         int match_count = 0;
         std::string line;
@@ -384,8 +381,8 @@ private:
     /**
      * @brief Search recursively in a directory
      */
-    int searchRecursive(const std::string& path, const std::regex& pattern,
-                       bool show_line_numbers, bool show_filename, bool use_color)
+    int searchRecursive(const std::string& path, const std::regex& pattern, bool show_line_numbers,
+                        bool show_filename, bool use_color)
     {
         int match_count = 0;
 
@@ -411,8 +408,8 @@ private:
                 {
                     if (entry.is_regular_file())
                     {
-                        match_count += searchFile(entry.path().string(), pattern,
-                                                 show_line_numbers, show_filename, use_color);
+                        match_count += searchFile(entry.path().string(), pattern, show_line_numbers,
+                                                  show_filename, use_color);
                     }
                 }
             }
@@ -457,4 +454,3 @@ private:
 };
 
 } // namespace homeshell
-
