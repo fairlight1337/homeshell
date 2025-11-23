@@ -1425,9 +1425,9 @@ ctest --output-on-failure
 ```
 
 **Test Suite Statistics:**
-- **Total tests**: 201 tests
+- **Total tests**: 220 tests
 - **Test pass rate**: 100% ✅
-- **Test execution time**: ~8.5 seconds
+- **Test execution time**: ~9 seconds
 
 **Test Coverage Breakdown:**
 - Status codes and error handling

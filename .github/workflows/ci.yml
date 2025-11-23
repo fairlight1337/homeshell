@@ -34,7 +34,14 @@ jobs:
       run: |
         cd external/sqlcipher
         ./configure CFLAGS="-DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=2" LDFLAGS="-lcrypto"
-        make sqlite3.c
+        make sqlite3.c sqlite3.h
+        # Create wrapper file with proper defines and includes
+        cat > sqlite3_wrapper.c << 'EOF'
+        /* Wrapper to ensure proper headers are included before sqlite3.c */
+        #define _GNU_SOURCE
+        #include <stdint.h>
+        #include "sqlite3.c"
+        EOF
         cd ../..
     
     - name: Build MicroPython embed

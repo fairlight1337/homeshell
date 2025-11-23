@@ -51,7 +51,21 @@ add_subdirectory(external/fmt)
 add_subdirectory(external/replxx)
 
 # Add SQLCipher for encrypted storage
-add_subdirectory(external/sqlcipher)
+# SQLCipher is built separately using configure/make, which generates sqlite3.c
+# We use a wrapper file that includes stdint.h first to fix uint64_t errors
+add_library(sqlcipher STATIC
+    external/sqlcipher/sqlite3_wrapper.c
+)
+target_include_directories(sqlcipher PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/sqlcipher>
+)
+target_compile_definitions(sqlcipher PRIVATE
+    SQLITE_HAS_CODEC
+    SQLITE_TEMP_STORE=2
+    SQLITE_EXTRA_INIT=sqlcipher_extra_init
+    SQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown
+)
+target_link_libraries(sqlcipher PRIVATE crypto)
 
 # Add miniz for zip/unzip functionality
 # Build miniz directly without modifying the submodule
@@ -144,15 +158,19 @@ add_library(homeshell
 )
 
 target_include_directories(homeshell
+    BEFORE PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/sqlcipher>
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/sqlcipher>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/micropython_embed>
         $<INSTALL_INTERFACE:include>
 )
 
 target_compile_features(homeshell PUBLIC cxx_std_20)
+
+# homeshell needs SQLITE_HAS_CODEC to access SQLCipher encryption functions
+target_compile_definitions(homeshell PUBLIC SQLITE_HAS_CODEC)
 
 # Executable target
 add_executable(homeshell-linux
