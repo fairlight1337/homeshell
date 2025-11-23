@@ -409,9 +409,9 @@ if(LCOV_EXECUTABLE AND GENHTML_EXECUTABLE)
         COMMAND ${CMAKE_COMMAND} -E echo "Running tests..."
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure || true
         
-        # Capture coverage data
+        # Capture coverage data (note: mismatch error type available in lcov >= 1.15)
         COMMAND ${CMAKE_COMMAND} -E echo "Capturing coverage data..."
-        COMMAND ${LCOV_EXECUTABLE} --directory . --capture --output-file "${CMAKE_BINARY_DIR}/coverage/coverage.info" --ignore-errors source
+        COMMAND ${LCOV_EXECUTABLE} --directory . --capture --output-file "${CMAKE_BINARY_DIR}/coverage/coverage.info" --ignore-errors gcov,source,mismatch || ${LCOV_EXECUTABLE} --directory . --capture --output-file "${CMAKE_BINARY_DIR}/coverage/coverage.info" --ignore-errors gcov,source
         
         # Extract only src/ and include/ directories (removes everything else)
         COMMAND ${CMAKE_COMMAND} -E echo "Filtering coverage data (keeping only src/ and include/)..."
