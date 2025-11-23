@@ -1,0 +1,95 @@
+name: CI Build and Test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          doxygen \
+          graphviz \
+          lcov \
+          libsqlcipher-dev \
+          libncurses-dev \
+          libtinfo-dev \
+          libreadline-dev
+    
+    - name: Build SQLCipher
+      run: |
+        cd external/sqlcipher
+        ./configure CFLAGS="-DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=2" LDFLAGS="-lcrypto"
+        make sqlite3.c
+        cd ../..
+    
+    - name: Build MicroPython embed
+      run: |
+        cd external
+        make -f micropython_build.mk
+        cd ..
+    
+    - name: Configure CMake with coverage
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON ..
+    
+    - name: Build
+      run: |
+        cd build
+        make -j$(nproc)
+    
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure --verbose
+    
+    - name: Generate coverage report
+      run: |
+        cd build
+        make coverage
+    
+    - name: Generate documentation
+      run: |
+        cd build
+        make docs
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: build/coverage/coverage_filtered.info
+        fail_ci_if_error: false
+    
+    - name: Archive coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: build/coverage/html/
+    
+    - name: Archive documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: doxygen-docs
+        path: build/docs/html/
+    
+    - name: Archive binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: homeshell-binary
+        path: build/homeshell-linux
+
