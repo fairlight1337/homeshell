@@ -231,10 +231,10 @@ jobs:
                     <h1>🏠 Homeshell</h1>
                     <p class="tagline">Your Portable, Self-Contained Command-Line Toolkit</p>
                     <div class="badges">
-                        <img src="https://img.shields.io/github/workflow/status/YOUR_USERNAME/homeshell/CI%20Build%20and%20Test?style=flat-square" alt="Build Status">
-                        <img src="https://img.shields.io/codecov/c/github/YOUR_USERNAME/homeshell?style=flat-square" alt="Coverage">
-                        <img src="https://img.shields.io/github/license/YOUR_USERNAME/homeshell?style=flat-square" alt="License">
-                        <img src="https://img.shields.io/github/v/release/YOUR_USERNAME/homeshell?style=flat-square" alt="Release">
+                        <img src="https://img.shields.io/github/workflow/status/fairlight1337/homeshell/CI%20Build%20and%20Test?style=flat-square" alt="Build Status">
+                        <img src="https://img.shields.io/codecov/c/github/fairlight1337/homeshell?style=flat-square" alt="Coverage">
+                        <img src="https://img.shields.io/github/license/fairlight1337/homeshell?style=flat-square" alt="License">
+                        <img src="https://img.shields.io/github/v/release/fairlight1337/homeshell?style=flat-square" alt="Release">
                     </div>
                 </header>
                 
@@ -254,7 +254,7 @@ jobs:
                     <div class="card">
                         <h2>💾 Download</h2>
                         <p>Get the latest release and start using Homeshell today.</p>
-                        <a href="https://github.com/YOUR_USERNAME/homeshell/releases" class="btn">Download</a>
+                        <a href="https://github.com/fairlight1337/homeshell/releases" class="btn">Download</a>
                     </div>
                 </div>
                 
@@ -297,7 +297,7 @@ jobs:
                 </div>
                 
                 <footer>
-                    <p>Built with ❤️ using C++20 | <a href="https://github.com/YOUR_USERNAME/homeshell" style="color: white;">View on GitHub</a></p>
+                    <p>Built with ❤️ using C++20 | <a href="https://github.com/fairlight1337/homeshell" style="color: white;">View on GitHub</a></p>
                 </footer>
             </div>
         </body>

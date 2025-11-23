@@ -1,8 +1,17 @@
 # Homeshell
 
+[![CI Build](https://github.com/fairlight1337/homeshell/workflows/CI%20Build%20and%20Test/badge.svg)](https://github.com/fairlight1337/homeshell/actions)
+[![codecov](https://codecov.io/gh/fairlight1337/homeshell/branch/main/graph/badge.svg)](https://codecov.io/gh/fairlight1337/homeshell)
+[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://fairlight1337.github.io/homeshell/docs/)
+[![Coverage Report](https://img.shields.io/badge/coverage-report-brightgreen.svg)](https://fairlight1337.github.io/homeshell/coverage/)
+[![License](https://img.shields.io/github/license/fairlight1337/homeshell)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/fairlight1337/homeshell)](https://github.com/fairlight1337/homeshell/releases)
+
 **Your Portable, Self-Contained Command-Line Toolkit**
 
 Homeshell is a modern, standalone shell designed to be carried with you—on a USB drive, portable SSD, or any removable media. Built with C++20, it's a fully self-contained environment that runs anywhere without installation or dependencies.
+
+📚 [Documentation](https://fairlight1337.github.io/homeshell/docs/) | 📊 [Coverage Report](https://fairlight1337.github.io/homeshell/coverage/) | 💾 [Download](https://github.com/fairlight1337/homeshell/releases)
 
 ## Philosophy
 
