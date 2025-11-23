@@ -411,7 +411,7 @@ if(LCOV_EXECUTABLE AND GENHTML_EXECUTABLE)
         
         # Capture coverage data
         COMMAND ${CMAKE_COMMAND} -E echo "Capturing coverage data..."
-        COMMAND ${LCOV_EXECUTABLE} --directory . --capture --output-file "${CMAKE_BINARY_DIR}/coverage/coverage.info"
+        COMMAND ${LCOV_EXECUTABLE} --directory . --capture --output-file "${CMAKE_BINARY_DIR}/coverage/coverage.info" --ignore-errors source
         
         # Extract only src/ and include/ directories (removes everything else)
         COMMAND ${CMAKE_COMMAND} -E echo "Filtering coverage data (keeping only src/ and include/)..."
