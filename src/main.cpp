@@ -9,6 +9,7 @@
 #include <homeshell/commands/CatCommand.hpp>
 #include <homeshell/commands/CdCommand.hpp>
 #include <homeshell/commands/ChmodCommand.hpp>
+#include <homeshell/commands/CpuInfoCommand.hpp>
 #include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/EditCommand.hpp>
@@ -253,6 +254,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<LsblkCommand>());
     registry.registerCommand(std::make_shared<SysinfoCommand>());
     registry.registerCommand(std::make_shared<AcpiInfoCommand>());
+    registry.registerCommand(std::make_shared<CpuInfoCommand>());
 
     // Scripting and info commands
     registry.registerCommand(std::make_shared<PythonCommand>());
