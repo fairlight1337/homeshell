@@ -717,12 +717,52 @@ private:
     std::vector<std::string> tokenize(const std::string& line)
     {
         std::vector<std::string> tokens;
-        std::istringstream iss(line);
-        std::string token;
+        std::string current_token;
+        bool in_single_quotes = false;
+        bool in_double_quotes = false;
+        bool in_quotes = false;
 
-        while (iss >> token)
+        for (size_t i = 0; i < line.length(); ++i)
         {
-            tokens.push_back(token);
+            char c = line[i];
+
+            // Handle quote toggling
+            if (c == '\'' && !in_double_quotes)
+            {
+                in_single_quotes = !in_single_quotes;
+                in_quotes = in_single_quotes || in_double_quotes;
+                // Don't add the quote character itself (it's for grouping only)
+                continue;
+            }
+            else if (c == '"' && !in_single_quotes)
+            {
+                in_double_quotes = !in_double_quotes;
+                in_quotes = in_single_quotes || in_double_quotes;
+                // Don't add the quote character itself (it's for grouping only)
+                continue;
+            }
+
+            // Handle whitespace
+            if (std::isspace(c) && !in_quotes)
+            {
+                // End of token
+                if (!current_token.empty())
+                {
+                    tokens.push_back(current_token);
+                    current_token.clear();
+                }
+            }
+            else
+            {
+                // Add character to current token
+                current_token += c;
+            }
+        }
+
+        // Add final token if any
+        if (!current_token.empty())
+        {
+            tokens.push_back(current_token);
         }
 
         return tokens;
