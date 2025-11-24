@@ -19,6 +19,11 @@ add_executable(homeshell_tests
     test_du_command.cpp
     test_output_redirection.cpp
     test_utility_commands.cpp
+    test_hostname_uptime_free_head_wc.cpp
+    test_cp_mv_ln.cpp
+    test_tee_diff.cpp
+    test_sha256_md5_base64.cpp
+    test_ps_tar_curl.cpp
     test_find_command.cpp
     test_grep_command.cpp
     test_locate_commands.cpp

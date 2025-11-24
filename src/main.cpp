@@ -6,44 +6,60 @@
 #include <homeshell/TerminalInfo.hpp>
 #include <homeshell/VirtualFilesystem.hpp>
 #include <homeshell/commands/AcpiInfoCommand.hpp>
+#include <homeshell/commands/Base64Command.hpp>
 #include <homeshell/commands/CatCommand.hpp>
 #include <homeshell/commands/CdCommand.hpp>
 #include <homeshell/commands/ChmodCommand.hpp>
+#include <homeshell/commands/CpCommand.hpp>
 #include <homeshell/commands/CpuInfoCommand.hpp>
+#include <homeshell/commands/CurlCommand.hpp>
 #include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/DfCommand.hpp>
+#include <homeshell/commands/DiffCommand.hpp>
 #include <homeshell/commands/DuCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/EditCommand.hpp>
 #include <homeshell/commands/ExitCommand.hpp>
 #include <homeshell/commands/FileCommand.hpp>
 #include <homeshell/commands/FindCommand.hpp>
+#include <homeshell/commands/FreeCommand.hpp>
 #include <homeshell/commands/GrepCommand.hpp>
+#include <homeshell/commands/HeadCommand.hpp>
 #include <homeshell/commands/HelpCommand.hpp>
+#include <homeshell/commands/HostnameCommand.hpp>
 #include <homeshell/commands/KillCommand.hpp>
 #include <homeshell/commands/LessCommand.hpp>
+#include <homeshell/commands/LnCommand.hpp>
 #include <homeshell/commands/LocateCommand.hpp>
 #include <homeshell/commands/LsCommand.hpp>
 #include <homeshell/commands/LsblkCommand.hpp>
 #include <homeshell/commands/LspciCommand.hpp>
 #include <homeshell/commands/LsusbCommand.hpp>
+#include <homeshell/commands/Md5sumCommand.hpp>
 #include <homeshell/commands/MkdirCommand.hpp>
 #include <homeshell/commands/MountCommand.hpp>
+#include <homeshell/commands/MvCommand.hpp>
 #include <homeshell/commands/PingCommand.hpp>
+#include <homeshell/commands/PsCommand.hpp>
 #include <homeshell/commands/PwdCommand.hpp>
 #include <homeshell/commands/PythonCommand.hpp>
 #include <homeshell/commands/RmCommand.hpp>
+#include <homeshell/commands/Sha256sumCommand.hpp>
 #include <homeshell/commands/SleepCommand.hpp>
 #include <homeshell/commands/SysinfoCommand.hpp>
 #include <homeshell/commands/TailCommand.hpp>
+#include <homeshell/commands/TarCommand.hpp>
+#include <homeshell/commands/TeeCommand.hpp>
 #include <homeshell/commands/TopCommand.hpp>
 #include <homeshell/commands/TouchCommand.hpp>
 #include <homeshell/commands/TreeCommand.hpp>
 #include <homeshell/commands/UnmountCommand.hpp>
 #include <homeshell/commands/UnzipCommand.hpp>
 #include <homeshell/commands/UpdatedbCommand.hpp>
+#include <homeshell/commands/UptimeCommand.hpp>
 #include <homeshell/commands/VersionCommand.hpp>
 #include <homeshell/commands/VfsCommand.hpp>
+#include <homeshell/commands/WcCommand.hpp>
 #include <homeshell/commands/ZipCommand.hpp>
 #include <homeshell/commands/ZipInfoCommand.hpp>
 #include <homeshell/version.h>
@@ -214,11 +230,20 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<SleepCommand>());
     registry.registerCommand(std::make_shared<DateTimeCommand>());
 
+    // Security & Hashing
+    registry.registerCommand(std::make_shared<Sha256sumCommand>());
+    registry.registerCommand(std::make_shared<Md5sumCommand>());
+    registry.registerCommand(std::make_shared<Base64Command>());
+
     // Filesystem commands
     registry.registerCommand(std::make_shared<LsCommand>());
     registry.registerCommand(std::make_shared<CdCommand>());
     registry.registerCommand(std::make_shared<PwdCommand>());
     registry.registerCommand(std::make_shared<CatCommand>());
+    registry.registerCommand(std::make_shared<CpCommand>());
+    registry.registerCommand(std::make_shared<MvCommand>());
+    registry.registerCommand(std::make_shared<LnCommand>());
+    registry.registerCommand(std::make_shared<HeadCommand>());
     registry.registerCommand(std::make_shared<TailCommand>());
     registry.registerCommand(std::make_shared<LessCommand>());
     registry.registerCommand(std::make_shared<MkdirCommand>());
@@ -228,6 +253,9 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<FileCommand>());
     registry.registerCommand(std::make_shared<FindCommand>());
     registry.registerCommand(std::make_shared<GrepCommand>());
+    registry.registerCommand(std::make_shared<WcCommand>());
+    registry.registerCommand(std::make_shared<DiffCommand>());
+    registry.registerCommand(std::make_shared<TeeCommand>());
     registry.registerCommand(std::make_shared<TreeCommand>());
     registry.registerCommand(std::make_shared<EditCommand>());
 
@@ -239,6 +267,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<ZipCommand>());
     registry.registerCommand(std::make_shared<UnzipCommand>());
     registry.registerCommand(std::make_shared<ZipInfoCommand>());
+    registry.registerCommand(std::make_shared<TarCommand>());
 
     // Virtual filesystem commands
     registry.registerCommand(std::make_shared<MountCommand>());
@@ -247,8 +276,10 @@ int main(int argc, char** argv)
 
     // Network commands
     registry.registerCommand(std::make_shared<PingCommand>());
+    registry.registerCommand(std::make_shared<CurlCommand>());
 
     // System commands
+    registry.registerCommand(std::make_shared<PsCommand>());
     registry.registerCommand(std::make_shared<TopCommand>());
     registry.registerCommand(std::make_shared<KillCommand>());
     registry.registerCommand(std::make_shared<LsusbCommand>());
@@ -259,6 +290,9 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<CpuInfoCommand>());
     registry.registerCommand(std::make_shared<DfCommand>());
     registry.registerCommand(std::make_shared<DuCommand>());
+    registry.registerCommand(std::make_shared<FreeCommand>());
+    registry.registerCommand(std::make_shared<HostnameCommand>());
+    registry.registerCommand(std::make_shared<UptimeCommand>());
 
     // Scripting and info commands
     registry.registerCommand(std::make_shared<PythonCommand>());
