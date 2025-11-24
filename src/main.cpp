@@ -5,6 +5,7 @@
 #include <homeshell/Shell.hpp>
 #include <homeshell/TerminalInfo.hpp>
 #include <homeshell/VirtualFilesystem.hpp>
+#include <homeshell/commands/AcpiInfoCommand.hpp>
 #include <homeshell/commands/CatCommand.hpp>
 #include <homeshell/commands/CdCommand.hpp>
 #include <homeshell/commands/ChmodCommand.hpp>
@@ -251,6 +252,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<LspciCommand>());
     registry.registerCommand(std::make_shared<LsblkCommand>());
     registry.registerCommand(std::make_shared<SysinfoCommand>());
+    registry.registerCommand(std::make_shared<AcpiInfoCommand>());
 
     // Scripting and info commands
     registry.registerCommand(std::make_shared<PythonCommand>());

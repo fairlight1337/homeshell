@@ -13,6 +13,7 @@ add_executable(homeshell_tests
     test_tree_command.cpp
     test_system_commands.cpp
     test_sysinfo_commands.cpp
+    test_acpi_info_command.cpp
     test_output_redirection.cpp
     test_utility_commands.cpp
     test_find_command.cpp
