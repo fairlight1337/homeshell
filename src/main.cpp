@@ -12,6 +12,7 @@
 #include <homeshell/commands/CpuInfoCommand.hpp>
 #include <homeshell/commands/DateTimeCommand.hpp>
 #include <homeshell/commands/DfCommand.hpp>
+#include <homeshell/commands/DuCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/EditCommand.hpp>
 #include <homeshell/commands/ExitCommand.hpp>
@@ -257,6 +258,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<AcpiInfoCommand>());
     registry.registerCommand(std::make_shared<CpuInfoCommand>());
     registry.registerCommand(std::make_shared<DfCommand>());
+    registry.registerCommand(std::make_shared<DuCommand>());
 
     // Scripting and info commands
     registry.registerCommand(std::make_shared<PythonCommand>());
