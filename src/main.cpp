@@ -11,6 +11,7 @@
 #include <homeshell/commands/ChmodCommand.hpp>
 #include <homeshell/commands/CpuInfoCommand.hpp>
 #include <homeshell/commands/DateTimeCommand.hpp>
+#include <homeshell/commands/DfCommand.hpp>
 #include <homeshell/commands/EchoCommand.hpp>
 #include <homeshell/commands/EditCommand.hpp>
 #include <homeshell/commands/ExitCommand.hpp>
@@ -255,6 +256,7 @@ int main(int argc, char** argv)
     registry.registerCommand(std::make_shared<SysinfoCommand>());
     registry.registerCommand(std::make_shared<AcpiInfoCommand>());
     registry.registerCommand(std::make_shared<CpuInfoCommand>());
+    registry.registerCommand(std::make_shared<DfCommand>());
 
     // Scripting and info commands
     registry.registerCommand(std::make_shared<PythonCommand>());
